@@ -182,6 +182,8 @@ let currentId = null,
   viewVersion = 0,
   pollTimer = null,
   files = [],
+  skippedFiles = [],
+  activeView = "list",
   lastJobs = [],
   compareMode = false,
   compareSelection = [];
@@ -963,6 +965,15 @@ function openFile(file) {
   }
   $("file-dialog").showModal();
 }
+function setFilesView(view) {
+  activeView = view === "map" ? "map" : "list";
+  $("view-list").setAttribute("aria-selected", String(activeView === "list"));
+  $("view-map").setAttribute("aria-selected", String(activeView === "map"));
+  $("list-view").hidden = activeView !== "list";
+  $("repo-map-view").hidden = activeView !== "map";
+}
+$("view-list").addEventListener("click", () => setFilesView("list"));
+$("view-map").addEventListener("click", () => setFilesView("map"));
 $("close-dialog").addEventListener("click", () => $("file-dialog").close());
 $("file-dialog").addEventListener("click", (event) => {
   if (event.target === $("file-dialog")) $("file-dialog").close();

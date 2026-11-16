@@ -301,12 +301,34 @@ yield { stage: "analyzing" }
               <h2>Dosyalara yakından bak</h2>
               <p>Ayrıntıları ve önerileri görmek için bir dosya seç.</p>
             </div>
-            <input
-              id="search"
-              type="search"
-              aria-label="Dosya yolu veya bulguya göre filtrele"
-              placeholder="Dosya yolu veya bulgu ara…"
-            />
+            <div class="files-header-controls">
+              <div class="view-switcher" role="tablist" aria-label="Sonuç görünümü">
+                <button
+                  id="view-list"
+                  class="view-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                >
+                  Liste
+                </button>
+                <button
+                  id="view-map"
+                  class="view-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  Repo haritası
+                </button>
+              </div>
+              <input
+                id="search"
+                type="search"
+                aria-label="Dosya yolu veya bulguya göre filtrele"
+                placeholder="Dosya yolu veya bulgu ara…"
+              />
+            </div>
           </div>
           <div class="file-toolbar">
             <label class="filter-toggle"
@@ -339,7 +361,7 @@ yield { stage: "analyzing" }
             </button>
             <span id="visible-count" role="status" aria-live="polite"></span>
           </div>
-          <div class="table-wrap">
+          <div id="list-view" class="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -351,6 +373,24 @@ yield { stage: "analyzing" }
               </thead>
               <tbody id="file-rows"></tbody>
             </table>
+          </div>
+          <div id="repo-map-view" class="repo-map-view" hidden>
+            <div class="map-toolbar">
+              <div id="map-legend" class="map-legend" aria-label="Harita göstergesi"></div>
+              <div class="map-actions">
+                <label class="filter-toggle"
+                  ><input id="include-skipped-map" type="checkbox" checked />
+                  Atlananları göster</label
+                >
+                <button id="map-expand-all" class="clear-filters" type="button">
+                  Tümünü aç
+                </button>
+                <button id="map-collapse-all" class="clear-filters" type="button">
+                  Tümünü daralt
+                </button>
+              </div>
+            </div>
+            <div id="repo-map-tree" class="repo-map-tree" aria-label="Klasör ve dosya haritası"></div>
           </div>
           <p id="empty-files" class="empty-message" hidden>
             Bu seçimde gösterilecek dosya yok.
