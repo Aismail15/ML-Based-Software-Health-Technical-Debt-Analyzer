@@ -329,6 +329,7 @@ async function selectJob(id) {
   clearTimeout(pollTimer);
   history.replaceState(null, "", `#scan=${encodeURIComponent(id)}`);
   $("results").hidden = true;
+  $("compare-view").hidden = true;
   $("welcome").hidden = true;
   $("job-panel").hidden = false;
   $("form-error").hidden = true;
@@ -375,6 +376,108 @@ async function selectJob(id) {
     }
   }
   await poll();
+}
+function formatDateTime(value) {
+  if (!value) return "Tarih bilinmiyor";
+  return new Date(value).toLocaleString("tr-TR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+function renderCompareDateCard(label, job, report) {
+  const card = document.createElement("div");
+  card.className = "card compare-date-card";
+  const eyebrow = document.createElement("span");
+  eyebrow.className = "eyebrow";
+  eyebrow.textContent = label;
+  const time = document.createElement("strong");
+  time.textContent = formatDateTime(job.created);
+  const meta = document.createElement("p");
+  meta.className = "muted";
+  const parts = [`Durum: ${report.status || "bilinmiyor"}`];
+  if (report.repository_state?.head) {
+    parts.push(`HEAD: ${report.repository_state.head.slice(0, 7)}`);
+  }
+  parts.push(`İncelenen: ${(report.files || []).length} dosya`);
+  meta.textContent = parts.join(" · ");
+  card.append(eyebrow, time, meta);
+  return card;
+}
+function renderComparison(diff) {
+  $("welcome").hidden = true;
+  $("job-panel").hidden = true;
+  $("results").hidden = true;
+  $("form-error").hidden = true;
+  $("compare-view").hidden = false;
+
+  const repoDisplay =
+    diff.newerReport.repository ||
+    diff.newerJob.payload?.repo_path ||
+    diff.olderJob.payload?.repo_path ||
+    "Depo";
+  text("compare-repo-name", projectName(repoDisplay));
+  text("compare-repo-path", repoDisplay);
+
+  $("compare-dates").replaceChildren(
+    renderCompareDateCard("ÖNCEKİ ANALİZ", diff.olderJob, diff.olderReport),
+    renderCompareDateCard("YENİ ANALİZ", diff.newerJob, diff.newerReport),
+  );
+
+  const warnings = [];
+  if (
+    normalizeRepoPath(diff.olderReport.repository) !==
+    normalizeRepoPath(diff.newerReport.repository)
+  ) {
+    warnings.push(
+      "Seçilen iki raporun depo yolları birebir aynı değil; eşleşmeyen dosyalar karşılaştırılamıyor olarak işaretlendi.",
+    );
+  }
+  if (
+    diff.olderReport.status !== "complete" ||
+    diff.newerReport.status !== "complete"
+  ) {
+    warnings.push(
+      "En az bir rapor kısmi veya boş tamamlandı; eksik dosyalar karşılaştırma dışında tutuldu.",
+    );
+  }
+  if (diff.matchedFileCount === 0) {
+    warnings.push(
+      "İki raporda ortak analiz edilmiş dosya bulunamadı; dosya düzeyinde bulgu karşılaştırması yapılamıyor.",
+    );
+  }
+  $("compare-warnings").replaceChildren();
+  $("compare-warnings").hidden = warnings.length === 0;
+  for (const msg of warnings) {
+    const notice = document.createElement("div");
+    notice.className = "notice warning-notice";
+    notice.textContent = msg;
+    $("compare-warnings").append(notice);
+  }
+
+  text("cmp-added-count", diff.addedFindings.length);
+  text("cmp-removed-count", diff.removedFindings.length);
+  text("cmp-persisting-count", diff.persistingFindings.length);
+  text("cmp-unmatched-count", diff.unmatchedFiles.length);
+}
+async function openComparison(jobA, jobB) {
+  const ordered = [jobA, jobB].sort(
+    (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime(),
+  );
+  const [olderJob, newerJob] = ordered;
+  $("run-compare").disabled = true;
+  $("form-error").hidden = true;
+  try {
+    const [olderReport, newerReport] = await Promise.all([
+      api(`/api/scans/${encodeURIComponent(olderJob.id)}/report`),
+      api(`/api/scans/${encodeURIComponent(newerJob.id)}/report`),
+    ]);
+    const diff = compareReports(olderReport, newerReport, olderJob, newerJob);
+    renderComparison(diff);
+  } catch (error) {
+    showError(error);
+  } finally {
+    updateCompareBar();
+  }
 }
 function renderReport(report, job) {
   files = report.files || [];
@@ -736,6 +839,16 @@ $("clear-compare").addEventListener("click", () => {
   compareSelection = [];
   updateCompareBar();
   renderHistory(lastJobs);
+});
+$("run-compare").addEventListener("click", () => {
+  if (compareSelection.length === 2) {
+    openComparison(compareSelection[0], compareSelection[1]);
+  }
+});
+$("compare-close").addEventListener("click", () => {
+  $("compare-view").hidden = true;
+  if (currentId) selectJob(currentId);
+  else $("welcome").hidden = false;
 });
 $("scan-form").addEventListener("submit", async (event) => {
   event.preventDefault();

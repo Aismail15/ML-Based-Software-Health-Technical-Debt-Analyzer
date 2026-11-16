@@ -369,6 +369,93 @@ yield { stage: "analyzing" }
           <pre id="evaluation"></pre>
         </details>
       </section>
+      <section id="compare-view" hidden aria-labelledby="compare-repo-name">
+        <div class="results-heading">
+          <div>
+            <div class="eyebrow">ANALİZ KARŞILAŞTIRMASI</div>
+            <h2 id="compare-repo-name"></h2>
+            <p id="compare-repo-path" class="muted"></p>
+          </div>
+          <div class="downloads">
+            <button id="compare-close" class="secondary" type="button">
+              Tekli görünüme dön
+            </button>
+          </div>
+        </div>
+        <div id="compare-dates" class="compare-dates-grid"></div>
+        <div id="compare-warnings" class="warnings-list" hidden aria-live="polite"></div>
+        <div class="stats compare-stats">
+          <div class="card stat">
+            <span>Yeni ortaya çıkan</span><strong id="cmp-added-count">0</strong
+            ><small>Eşleşen dosyalarda yeni bulgular</small>
+          </div>
+          <div class="card stat">
+            <span>Artık görünmeyen</span><strong id="cmp-removed-count">0</strong
+            ><small>Önceki raporda olup yenide olmayanlar</small>
+          </div>
+          <div class="card stat">
+            <span>İki raporda da süren</span><strong id="cmp-persisting-count">0</strong
+            ><small>Metrik değişimi hesaplanan bulgular</small>
+          </div>
+          <div class="card stat">
+            <span>Karşılaştırılamıyor</span><strong id="cmp-unmatched-count">0</strong
+            ><small>Yalnızca tek raporda analiz edilen dosya</small>
+          </div>
+        </div>
+        <section class="card compare-section" aria-labelledby="cmp-added-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="cmp-added-title">Yeni ortaya çıkan bulgular</h2>
+              <p>Her iki raporda da analiz edilen dosyalarda yeni görülen kurallar.</p>
+            </div>
+          </div>
+          <div id="cmp-added-list" class="diff-list"></div>
+        </section>
+        <section class="card compare-section" aria-labelledby="cmp-removed-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="cmp-removed-title">Önceki rapora göre artık görünmeyen bulgular</h2>
+              <p>Her iki raporda da analiz edilip yeni raporda yer almayan kurallar.</p>
+            </div>
+          </div>
+          <div id="cmp-removed-list" class="diff-list"></div>
+        </section>
+        <section class="card compare-section" aria-labelledby="cmp-persisting-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="cmp-persisting-title">İki raporda da bulunan bulgular ve metrik değişimleri</h2>
+              <p>Aynı dosya ve kural için önceki ve yeni metrik değerleri.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="persisting-table">
+              <thead>
+                <tr>
+                  <th>Dosya yolu</th>
+                  <th>Bulgu türü</th>
+                  <th>İlgili metrik</th>
+                  <th>Önceki</th>
+                  <th>Yeni</th>
+                  <th>Değişim</th>
+                </tr>
+              </thead>
+              <tbody id="cmp-persisting-rows"></tbody>
+            </table>
+          </div>
+          <p id="cmp-persisting-empty" class="empty-message" hidden>
+            İki raporda da ortak süren bulgu yok.
+          </p>
+        </section>
+        <section class="card compare-section" aria-labelledby="cmp-unmatched-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="cmp-unmatched-title">Eşleşmeyen dosyalar (karşılaştırılamıyor)</h2>
+              <p>Yalnızca bir raporda analiz edildiği için bulgu değişimi hesaplanamayan dosyalar.</p>
+            </div>
+          </div>
+          <div id="cmp-unmatched-list" class="diff-list"></div>
+        </section>
+      </section>
       <footer>
         CodeScope
         <span>Yazılım sağlığı ve teknik borç analizi · Yerel önizleme</span>
