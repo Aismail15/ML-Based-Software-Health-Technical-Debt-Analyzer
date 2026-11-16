@@ -288,6 +288,64 @@ p {
   justify-content: space-between;
   margin: 34px 10px 12px;
 }
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.compare-toggle {
+  background: transparent;
+  color: inherit;
+  border: 1px solid #5a5a60;
+  border-radius: 6px;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  padding: 5px 8px;
+}
+.compare-toggle.active {
+  background: #303137;
+  border-color: #eda275;
+}
+.compare-bar {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #4c4844;
+  border-radius: 8px;
+  background: #23252c;
+}
+.compare-hint {
+  font-size: 11px;
+  color: #c8c6c0;
+  margin-bottom: 8px;
+}
+.compare-bar-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.compare-go {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+.history button.compare-selected {
+  background: #2b2d33;
+  border-color: #eda275;
+}
+.history button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.compare-order-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #3d332a;
+  color: #f4c6a4;
+}
 .icon-button {
   background: transparent;
   color: inherit;
@@ -894,6 +952,95 @@ dialog h3 {
 .finding .finding-evidence {
   margin-top: 6px;
 }
+.compare-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.compare-date-card {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.compare-date-card strong {
+  font-size: 15px;
+}
+.compare-stats {
+  margin-top: 16px;
+}
+.compare-section {
+  margin-top: 16px;
+  overflow: hidden;
+}
+.compare-section .section-heading {
+  padding: 20px 23px 14px;
+  margin: 0;
+}
+.diff-list {
+  display: grid;
+  gap: 10px;
+  padding: 0 23px 20px;
+}
+.diff-list .empty-message {
+  padding: 6px 0;
+}
+.diff-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px 15px;
+  background: #faf9f5;
+}
+.diff-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.diff-path {
+  font:
+    12px Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.diff-reason {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.diff-suggestion {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.delta-badge,
+.unmatched-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.delta-up {
+  background: #fde8e4;
+  color: #963829;
+}
+.delta-down {
+  background: #e6f2ec;
+  color: #1f5c3d;
+}
+.delta-flat {
+  background: #ecebe4;
+  color: #55575d;
+}
+.delta-unknown,
+.unmatched-badge {
+  background: #fff1db;
+  color: #8c5518;
+}
 [hidden] {
   display: none !important;
 }
@@ -979,9 +1126,15 @@ dialog h3 {
   }
   .workspace-label,
   .nav-active,
-  .history-heading,
   .sidebar-foot {
     display: none;
+  }
+  .history-heading {
+    display: flex;
+    margin: 14px 0 8px;
+  }
+  .compare-dates-grid {
+    grid-template-columns: 1fr;
   }
   .history {
     display: flex;
@@ -1046,20 +1199,25 @@ dialog h3 {
   }
   tbody,
   .file-row,
-  .file-row td {
+  .file-row td,
+  .persisting-table tbody tr,
+  .persisting-table tbody td {
     display: block;
     width: 100%;
   }
-  .file-row {
+  .file-row,
+  .persisting-table tbody tr {
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
   }
-  .file-row td {
+  .file-row td,
+  .persisting-table tbody td {
     padding: 5px 0;
     border-bottom: 0;
     max-width: none;
   }
-  .file-row td::before {
+  .file-row td::before,
+  .persisting-table tbody td::before {
     content: attr(data-label);
     display: block;
     font-size: 10px;

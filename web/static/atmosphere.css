@@ -157,6 +157,32 @@ h1 span,
   background: #71d79912;
   border-color: #72c89a30;
 }
+.compare-toggle {
+  color: #b7d6c5;
+  border-color: #80c29f47;
+}
+.compare-toggle:hover,
+.compare-toggle.active {
+  background: #71d7991c;
+  border-color: #7ee8ab;
+  color: #ecfff3;
+}
+.compare-bar {
+  background: #0b2017d6;
+  border-color: #72c89a3d;
+}
+.compare-hint {
+  color: #b7d6c5;
+}
+.history button.compare-selected {
+  background: #71d7991f;
+  border-color: #7ee8ab;
+}
+.compare-order-badge {
+  background: #163d28;
+  color: #94f5be;
+  border: 1px solid #67d89947;
+}
 .history button {
   color: #d3e8dc;
 }
@@ -298,6 +324,40 @@ input:focus,
 }
 .more-findings {
   color: #85edb1;
+}
+.diff-item {
+  background: #0b2017b8;
+  border-color: #8fd6aa2b;
+}
+.diff-path {
+  color: #c4edcf;
+}
+.diff-reason {
+  color: #a3bcb0;
+}
+.diff-suggestion {
+  color: #e2f3eb;
+}
+.delta-up {
+  background: #40201f;
+  color: #f7b3a8;
+  border: 1px solid #e8847747;
+}
+.delta-down {
+  background: #163d28;
+  color: #8ceeb5;
+  border: 1px solid #67d8993d;
+}
+.delta-flat {
+  background: #152b20;
+  color: #b5cdbf;
+  border: 1px solid #8fd6aa2b;
+}
+.delta-unknown,
+.unmatched-badge {
+  background: #3d2c14;
+  color: #f4cd84;
+  border: 1px solid #e4b45e47;
 }
 th {
   color: #b5cdbf;
