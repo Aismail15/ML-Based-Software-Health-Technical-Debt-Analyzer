@@ -55,6 +55,129 @@ const ruleMeta = {
 function ruleLabel(rule) {
   return ruleMeta[rule]?.label || rule;
 }
+const ruleMetricSpec = {
+  complex_function: {
+    key: "cyclomatic_complexity_max",
+    label: "En yüksek karmaşıklık",
+    decimals: 1,
+  },
+  large_file: {
+    key: "loc",
+    label: "Kod satırı (LOC)",
+    decimals: 0,
+  },
+  dense_expressions: {
+    key: "halstead_difficulty",
+    label: "Halstead zorluğu",
+    decimals: 1,
+  },
+};
+function indexByPath(items) {
+  const map = new Map();
+  for (const item of items || []) {
+    if (item?.path) map.set(item.path, item);
+  }
+  return map;
+}
+function indexFindingsByRule(file) {
+  const map = new Map();
+  for (const finding of file?.result?.maintainability_findings || []) {
+    if (finding?.rule && !map.has(finding.rule)) map.set(finding.rule, finding);
+  }
+  return map;
+}
+function compareReports(olderReport, newerReport, olderJob, newerJob) {
+  const olderFiles = indexByPath(olderReport.files);
+  const newerFiles = indexByPath(newerReport.files);
+  const olderSkipped = indexByPath(olderReport.skipped_files);
+  const newerSkipped = indexByPath(newerReport.skipped_files);
+  const allPaths = Array.from(
+    new Set([...olderFiles.keys(), ...newerFiles.keys()]),
+  ).sort((a, b) => a.localeCompare(b, "tr"));
+
+  const addedFindings = [];
+  const removedFindings = [];
+  const persistingFindings = [];
+  const unmatchedFiles = [];
+  let matchedFileCount = 0;
+
+  for (const path of allPaths) {
+    const oldFile = olderFiles.get(path);
+    const newFile = newerFiles.get(path);
+    if (!oldFile || !newFile) {
+      unmatchedFiles.push({
+        path,
+        presentIn: newFile ? "newer" : "older",
+        skippedReason: newFile
+          ? olderSkipped.get(path)?.reason || null
+          : newerSkipped.get(path)?.reason || null,
+        file: newFile || oldFile,
+      });
+      continue;
+    }
+    matchedFileCount += 1;
+    const oldRules = indexFindingsByRule(oldFile);
+    const newRules = indexFindingsByRule(newFile);
+
+    for (const [rule, finding] of newRules.entries()) {
+      if (!oldRules.has(rule)) {
+        addedFindings.push({
+          path,
+          rule,
+          finding,
+          metrics: newFile.metrics || {},
+        });
+      } else {
+        const spec = ruleMetricSpec[rule];
+        const olderValue =
+          spec && typeof oldFile.metrics?.[spec.key] === "number"
+            ? oldFile.metrics[spec.key]
+            : null;
+        const newerValue =
+          spec && typeof newFile.metrics?.[spec.key] === "number"
+            ? newFile.metrics[spec.key]
+            : null;
+        const delta =
+          olderValue !== null && newerValue !== null
+            ? newerValue - olderValue
+            : null;
+        persistingFindings.push({
+          path,
+          rule,
+          metricLabel: spec?.label || "İlgili metrik",
+          decimals: spec?.decimals ?? 2,
+          olderValue,
+          newerValue,
+          delta,
+          olderFinding: oldRules.get(rule),
+          newerFinding: finding,
+        });
+      }
+    }
+    for (const [rule, finding] of oldRules.entries()) {
+      if (!newRules.has(rule)) {
+        removedFindings.push({
+          path,
+          rule,
+          finding,
+          metrics: oldFile.metrics || {},
+        });
+      }
+    }
+  }
+
+  return {
+    olderJob,
+    newerJob,
+    olderReport,
+    newerReport,
+    matchedFileCount,
+    addedFindings,
+    removedFindings,
+    persistingFindings,
+    unmatchedFiles,
+  };
+}
 let currentId = null,
   viewVersion = 0,
   pollTimer = null,
