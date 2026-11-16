@@ -252,6 +252,53 @@ input:focus,
   color: #c1decf;
   border-color: #72c897;
 }
+.warning-notice {
+  background: #332714a6;
+  color: #f3dfb6;
+  border-color: #e4b45e;
+}
+.meta-chip,
+.metric-chip,
+.detail-metric {
+  background: #0b201799;
+  border-color: #8fd6aa2b;
+  color: #b7d6c5;
+}
+.detail-metric strong {
+  color: #ecfff3;
+}
+.clear-filters {
+  border-color: #8fd6aa38;
+  color: #b7d6c5;
+}
+.clear-filters:hover {
+  background: #85edb114;
+  border-color: #7ee8ab;
+  color: #94f5be;
+}
+.rule-clean {
+  background: #163d28;
+  color: #8ceeb5;
+  border: 1px solid #67d8993d;
+}
+.rule-complex_function {
+  background: #3d2c14;
+  color: #f4cd84;
+  border: 1px solid #e4b45e47;
+}
+.rule-large_file {
+  background: #40201f;
+  color: #f7b3a8;
+  border: 1px solid #e8847747;
+}
+.rule-dense_expressions {
+  background: #232d45;
+  color: #b9cdfa;
+  border: 1px solid #88a8f447;
+}
+.more-findings {
+  color: #85edb1;
+}
 th {
   color: #b5cdbf;
   background: #0b2017dc;
@@ -260,7 +307,8 @@ td {
   border-color: #a2dabb16;
   font-variant-numeric: tabular-nums;
 }
-tbody tr:hover {
+tbody tr:hover,
+.file-row:focus-within {
   background: #85edb10a;
 }
 .file-button {
@@ -299,6 +347,12 @@ dialog::backdrop {
 }
 .finding p {
   color: #b4cebd;
+}
+.finding .finding-suggestion {
+  color: #e2f3eb;
+}
+.finding-head code {
+  color: #9ab3a5;
 }
 .skip-link {
   background: #153e28;
