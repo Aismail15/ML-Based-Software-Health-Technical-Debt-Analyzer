@@ -58,12 +58,18 @@ function ruleLabel(rule) {
 let currentId = null,
   viewVersion = 0,
   pollTimer = null,
-  files = [];
+  files = [],
+  lastJobs = [],
+  compareMode = false,
+  compareSelection = [];
 function text(id, value) {
   $(id).textContent = value;
 }
 function projectName(path) {
   return path.replace(/\\/g, "/").replace(/\/$/, "").split("/").pop() || path;
+}
+function normalizeRepoPath(path) {
+  return (path || "").replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
 }
 async function api(url, options) {
   let response;
@@ -91,7 +97,48 @@ function showError(error) {
   text("form-error", error.message);
   $("form-error").hidden = false;
 }
+function updateCompareBar() {
+  $("compare-bar").hidden = !compareMode;
+  $("compare-mode-btn").setAttribute("aria-pressed", String(compareMode));
+  $("compare-mode-btn").classList.toggle("active", compareMode);
+  const count = compareSelection.length;
+  $("run-compare").disabled = count !== 2;
+  $("run-compare").textContent = `Karşılaştır (${count}/2)`;
+  if (count === 0) {
+    text("compare-hint", "Aynı depodan 2 tamamlanmış analiz seç.");
+  } else if (count === 1) {
+    text(
+      "compare-hint",
+      `${projectName(compareSelection[0].payload?.repo_path || "Proje")} için 2. analizi seç.`,
+    );
+  } else {
+    text(
+      "compare-hint",
+      `${projectName(compareSelection[0].payload?.repo_path || "Proje")} · 2 analiz seçildi.`,
+    );
+  }
+}
+function toggleCompareSelection(job) {
+  const existingIndex = compareSelection.findIndex((item) => item.id === job.id);
+  if (existingIndex >= 0) {
+    compareSelection.splice(existingIndex, 1);
+  } else {
+    if (job.state !== "succeeded") return;
+    if (compareSelection.length > 0) {
+      const targetRepo = normalizeRepoPath(compareSelection[0].payload?.repo_path);
+      if (normalizeRepoPath(job.payload?.repo_path) !== targetRepo) return;
+    }
+    if (compareSelection.length >= 2) {
+      compareSelection = [compareSelection[1], job];
+    } else {
+      compareSelection.push(job);
+    }
+  }
+  updateCompareBar();
+  renderHistory(lastJobs);
+}
 function renderHistory(jobs) {
+  lastJobs = jobs;
   $("history").replaceChildren();
   if (!jobs.length) {
     const p = document.createElement("p");
@@ -99,20 +146,57 @@ function renderHistory(jobs) {
     p.textContent = "Henüz analiz yok.";
     $("history").append(p);
   }
+  const anchorRepo =
+    compareMode && compareSelection.length > 0
+      ? normalizeRepoPath(compareSelection[0].payload?.repo_path)
+      : null;
   for (const job of jobs) {
     const button = document.createElement("button");
-    button.className = job.id === currentId ? "active" : "";
+    button.type = "button";
+    const selectedIdx = compareSelection.findIndex((item) => item.id === job.id);
+    const isSelected = selectedIdx >= 0;
+    const isCompatible =
+      !compareMode ||
+      (job.state === "succeeded" &&
+        (anchorRepo === null ||
+          normalizeRepoPath(job.payload?.repo_path) === anchorRepo));
+    button.className = [
+      !compareMode && job.id === currentId ? "active" : "",
+      compareMode && isSelected ? "compare-selected" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    if (compareMode) {
+      button.setAttribute("aria-pressed", String(isSelected));
+      button.disabled = !isCompatible && !isSelected;
+    }
     const name = document.createElement("strong");
-    name.textContent = projectName(job.payload.repo_path || "Proje");
+    name.textContent = projectName(job.payload?.repo_path || "Proje");
     const detail = document.createElement("small");
-    detail.textContent = `${states[job.state] || job.state} · ${new Date(job.created).toLocaleDateString("tr-TR")}`;
+    const dateStr = new Date(job.created).toLocaleString("tr-TR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+    detail.textContent = `${states[job.state] || job.state} · ${dateStr}`;
     button.append(name, detail);
-    button.addEventListener("click", () => selectJob(job.id));
+    if (compareMode && isSelected) {
+      const badge = document.createElement("span");
+      badge.className = "compare-order-badge";
+      badge.textContent = `${selectedIdx + 1}. seçim`;
+      button.append(badge);
+    }
+    button.addEventListener("click", () => {
+      if (compareMode) toggleCompareSelection(job);
+      else selectJob(job.id);
+    });
     $("history").append(button);
   }
 }
 async function refreshHistory() {
   const jobs = await api("/api/scans");
+  const validIds = new Set(jobs.map((j) => j.id));
+  compareSelection = compareSelection.filter((j) => validIds.has(j.id));
+  updateCompareBar();
   renderHistory(jobs);
   return jobs;
 }
@@ -513,10 +597,22 @@ $("clear-filters").addEventListener("click", () => {
 $("refresh").addEventListener("click", async () => {
   try {
     await refreshHistory();
-    if (currentId) await selectJob(currentId);
+    if (currentId && !compareMode) await selectJob(currentId);
   } catch (e) {
     showError(e);
   }
+});
+$("compare-mode-btn").addEventListener("click", () => {
+  compareMode = !compareMode;
+  if (!compareMode) compareSelection = [];
+  updateCompareBar();
+  renderHistory(lastJobs);
+});
+$("clear-compare").addEventListener("click", () => {
+  compareMode = false;
+  compareSelection = [];
+  updateCompareBar();
+  renderHistory(lastJobs);
 });
 $("scan-form").addEventListener("submit", async (event) => {
   event.preventDefault();

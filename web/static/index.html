@@ -74,14 +74,43 @@ yield { stage: "analyzing" }
       <div class="workspace-label">ÇALIŞMA ALANIN</div>
       <a class="nav-active" href="#new-scan">◈ <span>Proje analizi</span></a>
       <div class="history-heading">
-        <span>SON ANALİZLER</span
-        ><button
-          id="refresh"
-          class="icon-button"
-          aria-label="Analiz geçmişini yenile"
-        >
-          ↻
-        </button>
+        <span>SON ANALİZLER</span>
+        <div class="history-actions">
+          <button
+            id="compare-mode-btn"
+            class="compare-toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            Karşılaştır
+          </button>
+          <button
+            id="refresh"
+            type="button"
+            class="icon-button"
+            aria-label="Analiz geçmişini yenile"
+          >
+            ↻
+          </button>
+        </div>
+      </div>
+      <div id="compare-bar" class="compare-bar" hidden aria-live="polite">
+        <p id="compare-hint" class="compare-hint">
+          Aynı depodan 2 tamamlanmış analiz seç.
+        </p>
+        <div class="compare-bar-actions">
+          <button
+            id="run-compare"
+            class="primary compare-go"
+            type="button"
+            disabled
+          >
+            Karşılaştır (0/2)
+          </button>
+          <button id="clear-compare" class="clear-filters" type="button">
+            İptal
+          </button>
+        </div>
       </div>
       <div id="history" class="history">
         <p class="muted">Geçmiş yükleniyor…</p>
