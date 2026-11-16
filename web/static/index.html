@@ -239,24 +239,30 @@ yield { stage: "analyzing" }
             <div class="eyebrow">ANALİZ SONUCU</div>
             <h2 id="project-name"></h2>
             <p id="scan-info" class="muted"></p>
+            <div id="scan-meta" class="scan-meta" aria-label="Tarama özeti"></div>
           </div>
           <div class="downloads">
             <a id="json-download" class="secondary">JSON indir ↓</a
             ><a id="csv-download" class="secondary">CSV indir ↓</a>
           </div>
         </div>
+        <div id="scan-warnings" class="warnings-list" hidden aria-live="polite"></div>
         <div class="stats">
           <div class="card stat">
             <span>İncelenen dosya</span><strong id="file-count">0</strong
-            ><small>Mevcut Python dosyaları</small>
+            ><small id="file-count-detail">Mevcut Python dosyaları</small>
           </div>
           <div class="card stat">
             <span>Bakım bulgusu</span><strong id="finding-count">0</strong
-            ><small>Gözden geçirilecek noktalar</small>
+            ><small id="finding-files-detail">Gözden geçirilecek noktalar</small>
           </div>
           <div class="card stat">
             <span>Atlanan dosya</span><strong id="skip-count">0</strong
             ><small>Nedenleri aşağıda listelenir</small>
+          </div>
+          <div class="card stat">
+            <span>Eğitim revizyonu</span><strong id="training-count">0</strong
+            ><small id="model-status-detail">Model durumu</small>
           </div>
         </div>
         <div id="model-notice" class="notice"></div>

@@ -165,15 +165,66 @@ function renderReport(report, job) {
     "scan-info",
     `${status[report.status] || "Analiz tamamlandı"} · ${new Date(job.created).toLocaleString("tr-TR")}`,
   );
-  text("file-count", files.length);
-  text(
-    "finding-count",
-    files.reduce(
-      (n, file) => n + file.result.maintainability_findings.length,
-      0,
-    ),
+  const metaItems = [];
+  if (report.scan?.max_commits != null) {
+    metaItems.push(`Commit limiti: ${report.scan.max_commits}`);
+  }
+  if (report.scan?.observation_commits != null) {
+    metaItems.push(`Gözlem penceresi: ${report.scan.observation_commits}`);
+  }
+  if (report.repository_state?.head) {
+    metaItems.push(`HEAD: ${report.repository_state.head.slice(0, 7)}`);
+  }
+  if (report.repository_state?.tracked_changes) {
+    metaItems.push("Çalışma ağacında kaydedilmemiş değişiklik var");
+  }
+  $("scan-meta").replaceChildren();
+  for (const label of metaItems) {
+    const badge = document.createElement("span");
+    badge.className = "meta-chip";
+    badge.textContent = label;
+    $("scan-meta").append(badge);
+  }
+  const warnings = report.warnings || [];
+  $("scan-warnings").replaceChildren();
+  $("scan-warnings").hidden = warnings.length === 0;
+  for (const warning of warnings) {
+    const item = document.createElement("div");
+    item.className = "notice warning-notice";
+    item.textContent = warning.message || warning.code;
+    $("scan-warnings").append(item);
+  }
+  const summary = report.summary || {};
+  const analyzedCount = summary.analyzed_files ?? files.length;
+  const filesWithFindings = files.filter(
+    (file) => file.result.maintainability_findings.length > 0,
+  ).length;
+  const totalFindings = files.reduce(
+    (n, file) => n + file.result.maintainability_findings.length,
+    0,
   );
-  text("skip-count", report.skipped_files?.length || 0);
+  text("file-count", analyzedCount);
+  text(
+    "file-count-detail",
+    report.scan?.file
+      ? `Seçili dosya: ${report.scan.file}`
+      : "Mevcut Python dosyaları",
+  );
+  text("finding-count", totalFindings);
+  text(
+    "finding-files-detail",
+    filesWithFindings > 0
+      ? `${filesWithFindings} dosyada bakım bulgusu`
+      : "Bakım bulgusu saptanmadı",
+  );
+  text("skip-count", summary.skipped_files ?? (report.skipped_files?.length || 0));
+  text("training-count", summary.training_revisions ?? 0);
+  text(
+    "model-status-detail",
+    report.evaluation_details?.status === "evaluated"
+      ? "Risk modeli değerlendirildi"
+      : "Risk modeli kullanılamıyor",
+  );
   text(
     "model-notice",
     report.evaluation_details?.status === "evaluated"
