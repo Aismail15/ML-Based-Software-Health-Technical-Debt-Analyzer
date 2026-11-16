@@ -403,6 +403,151 @@ function renderCompareDateCard(label, job, report) {
   card.append(eyebrow, time, meta);
   return card;
 }
+function formatMetricValue(value, decimals = 1) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "Karşılaştırılamıyor";
+  }
+  return decimals === 0 ? String(Math.round(value)) : value.toFixed(decimals);
+}
+function formatDeltaValue(delta, decimals = 1) {
+  if (typeof delta !== "number" || Number.isNaN(delta)) {
+    return { text: "Karşılaştırılamıyor", cls: "delta-unknown" };
+  }
+  if (delta === 0) return { text: "0", cls: "delta-flat" };
+  const formatted =
+    decimals === 0 ? String(Math.round(delta)) : delta.toFixed(decimals);
+  return delta > 0
+    ? { text: `+${formatted}`, cls: "delta-up" }
+    : { text: formatted, cls: "delta-down" };
+}
+function renderDiffFindingList(containerId, items, emptyMessage) {
+  const container = $(containerId);
+  container.replaceChildren();
+  if (!items.length) {
+    const p = document.createElement("p");
+    p.className = "empty-message";
+    p.textContent = emptyMessage;
+    container.append(p);
+    return;
+  }
+  for (const item of items) {
+    const card = document.createElement("div");
+    card.className = "diff-item";
+    const top = document.createElement("div");
+    top.className = "diff-item-top";
+    const path = document.createElement("code");
+    path.className = "diff-path";
+    path.textContent = item.path;
+    const badges = document.createElement("div");
+    badges.className = "rule-badges";
+    const ruleBadge = document.createElement("span");
+    ruleBadge.className = `rule-badge rule-${item.rule}`;
+    ruleBadge.textContent = ruleLabel(item.rule);
+    badges.append(ruleBadge);
+    const spec = ruleMetricSpec[item.rule];
+    if (spec && typeof item.metrics?.[spec.key] === "number") {
+      const metricChip = document.createElement("span");
+      metricChip.className = "metric-chip";
+      metricChip.textContent = `${spec.label}: ${formatMetricValue(item.metrics[spec.key], spec.decimals)}`;
+      badges.append(metricChip);
+    }
+    top.append(path, badges);
+    card.append(top);
+    if (item.finding?.reason) {
+      const reason = document.createElement("p");
+      reason.className = "diff-reason";
+      reason.textContent = item.finding.reason;
+      card.append(reason);
+    }
+    if (item.finding?.suggestion) {
+      const suggestion = document.createElement("p");
+      suggestion.className = "diff-suggestion";
+      suggestion.textContent = item.finding.suggestion;
+      card.append(suggestion);
+    }
+    container.append(card);
+  }
+}
+function renderPersistingFindings(items) {
+  const tbody = $("cmp-persisting-rows");
+  tbody.replaceChildren();
+  $("cmp-persisting-empty").hidden = items.length > 0;
+  for (const item of items) {
+    const tr = document.createElement("tr");
+    const tdPath = document.createElement("td");
+    tdPath.dataset.label = "Dosya yolu";
+    const code = document.createElement("code");
+    code.className = "diff-path";
+    code.textContent = item.path;
+    tdPath.append(code);
+
+    const tdRule = document.createElement("td");
+    tdRule.dataset.label = "Bulgu türü";
+    const badge = document.createElement("span");
+    badge.className = `rule-badge rule-${item.rule}`;
+    badge.textContent = ruleLabel(item.rule);
+    tdRule.append(badge);
+
+    const tdMetric = document.createElement("td");
+    tdMetric.dataset.label = "İlgili metrik";
+    tdMetric.textContent = item.metricLabel;
+
+    const tdOld = document.createElement("td");
+    tdOld.dataset.label = "Önceki";
+    tdOld.textContent = formatMetricValue(item.olderValue, item.decimals);
+
+    const tdNew = document.createElement("td");
+    tdNew.dataset.label = "Yeni";
+    tdNew.textContent = formatMetricValue(item.newerValue, item.decimals);
+
+    const tdDelta = document.createElement("td");
+    tdDelta.dataset.label = "Değişim";
+    const deltaInfo = formatDeltaValue(item.delta, item.decimals);
+    const deltaBadge = document.createElement("span");
+    deltaBadge.className = `delta-badge ${deltaInfo.cls}`;
+    deltaBadge.textContent = deltaInfo.text;
+    tdDelta.append(deltaBadge);
+
+    tr.append(tdPath, tdRule, tdMetric, tdOld, tdNew, tdDelta);
+    tbody.append(tr);
+  }
+}
+function renderUnmatchedFiles(items) {
+  const container = $("cmp-unmatched-list");
+  container.replaceChildren();
+  if (!items.length) {
+    const p = document.createElement("p");
+    p.className = "empty-message";
+    p.textContent = "Tüm analiz edilen dosyalar iki raporda da eşleşti.";
+    container.append(p);
+    return;
+  }
+  for (const item of items) {
+    const card = document.createElement("div");
+    card.className = "diff-item unmatched-item";
+    const top = document.createElement("div");
+    top.className = "diff-item-top";
+    const path = document.createElement("code");
+    path.className = "diff-path";
+    path.textContent = item.path;
+    const badge = document.createElement("span");
+    badge.className = "unmatched-badge";
+    badge.textContent = "Karşılaştırılamıyor";
+    top.append(path, badge);
+    const reason = document.createElement("p");
+    reason.className = "diff-reason";
+    const side =
+      item.presentIn === "newer"
+        ? "Yalnızca yeni raporda analiz edildi"
+        : "Yalnızca önceki raporda analiz edildi";
+    const skipText = item.skippedReason
+      ? ` (diğer raporda atlanma nedeni: ${reasons[item.skippedReason] || item.skippedReason})`
+      : "";
+    reason.textContent = `${side}${skipText}.`;
+    card.append(top, reason);
+    container.append(card);
+  }
+}
 function renderComparison(diff) {
   $("welcome").hidden = true;
   $("job-panel").hidden = true;
@@ -458,6 +603,19 @@ function renderComparison(diff) {
   text("cmp-removed-count", diff.removedFindings.length);
   text("cmp-persisting-count", diff.persistingFindings.length);
   text("cmp-unmatched-count", diff.unmatchedFiles.length);
+
+  renderDiffFindingList(
+    "cmp-added-list",
+    diff.addedFindings,
+    "Eşleşen dosyalarda yeni ortaya çıkan bulgu yok.",
+  );
+  renderDiffFindingList(
+    "cmp-removed-list",
+    diff.removedFindings,
+    "Önceki rapora göre artık görünmeyen bulgu yok.",
+  );
+  renderPersistingFindings(diff.persistingFindings);
+  renderUnmatchedFiles(diff.unmatchedFiles);
 }
 async function openComparison(jobA, jobB) {
   const ordered = [jobA, jobB].sort(
