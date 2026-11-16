@@ -719,6 +719,138 @@ progress {
 #search {
   width: 260px;
 }
+.files-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.view-switcher {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f6f5f1;
+}
+.view-tab {
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+.view-tab[aria-selected="true"] {
+  background: #22242a;
+  color: #f4f2ed;
+}
+.repo-map-view {
+  padding: 0 23px 23px;
+}
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.map-legend,
+.map-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.map-skipped-badge {
+  background: #ecebe4;
+  color: #55575d;
+}
+.repo-map-tree {
+  display: grid;
+  gap: 8px;
+}
+.map-folder {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #faf9f5;
+}
+.map-folder-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  list-style: none;
+}
+.map-folder-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.map-folder-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.map-folder-children {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px 18px;
+  border-left: 2px solid var(--line);
+  margin-left: 14px;
+}
+.map-file {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  background: #fff;
+  display: grid;
+  gap: 5px;
+}
+.map-file-clean {
+  border-left-color: #2f7d57;
+}
+.map-rule-complex_function {
+  border-left-color: #c77b24;
+}
+.map-rule-large_file {
+  border-left-color: #b84a39;
+}
+.map-rule-dense_expressions {
+  border-left-color: #6b52ae;
+}
+.map-file-skipped {
+  border-left-color: #8c8e94;
+  opacity: 0.85;
+  cursor: default;
+}
+.map-file-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.map-file-name {
+  font:
+    12px Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.map-file-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .clear-filters {
   padding: 7px 11px;
   border-radius: 6px;
@@ -1190,6 +1322,16 @@ dialog h3 {
   }
   #search {
     width: 100%;
+  }
+  .files-header-controls {
+    width: 100%;
+  }
+  .repo-map-view {
+    padding: 0 16px 18px;
+  }
+  .map-folder-children {
+    padding: 0 8px 10px 10px;
+    margin-left: 8px;
   }
   table {
     min-width: 0;
