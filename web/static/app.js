@@ -641,11 +641,13 @@ async function openComparison(jobA, jobB) {
 }
 function renderReport(report, job) {
   files = report.files || [];
+  skippedFiles = report.skipped_files || [];
   $("results").hidden = false;
   $("search").value = "";
   $("findings-only").checked = false;
   $("rule-filter").value = "all";
   $("file-sort").value = "original";
+  $("include-skipped-map").checked = true;
   text("project-name", projectName(report.repository || job.payload.repo_path));
   const status = {
     complete: "Analiz tamamlandı",
@@ -796,11 +798,32 @@ function renderFiles() {
       }
       return byName;
     });
+  const canShowSkipped = !findingsOnly && ruleFilter === "all";
+  $("include-skipped-map").disabled = !canShowSkipped;
+  const filteredSkipped =
+    canShowSkipped && $("include-skipped-map").checked
+      ? skippedFiles.filter((item) => {
+          if (!query) return true;
+          const haystack = `${item.path} ${reasons[item.reason] || item.reason}`
+            .toLocaleLowerCase("tr-TR");
+          return haystack.includes(query);
+        })
+      : [];
+  renderRepoMap(selected, filteredSkipped, {
+    expandAll: Boolean(query || findingsOnly || ruleFilter !== "all"),
+  });
   $("clear-filters").hidden =
     !query && !findingsOnly && ruleFilter === "all" && sort === "original";
-  text("visible-count", `${selected.length} / ${files.length} dosya`);
+  const skippedSuffix =
+    activeView === "map" && filteredSkipped.length > 0
+      ? ` (+${filteredSkipped.length} atlanan)`
+      : "";
+  text("visible-count", `${selected.length} / ${files.length} dosya${skippedSuffix}`);
   $("file-rows").replaceChildren();
-  $("empty-files").hidden = selected.length > 0;
+  $("empty-files").hidden =
+    activeView === "map"
+      ? selected.length > 0 || filteredSkipped.length > 0
+      : selected.length > 0;
   for (const file of selected) {
     const fileFindings = file.result.maintainability_findings;
     const row = document.createElement("tr");
@@ -1188,9 +1211,21 @@ function setFilesView(view) {
   $("view-map").setAttribute("aria-selected", String(activeView === "map"));
   $("list-view").hidden = activeView !== "list";
   $("repo-map-view").hidden = activeView !== "map";
+  renderFiles();
 }
 $("view-list").addEventListener("click", () => setFilesView("list"));
 $("view-map").addEventListener("click", () => setFilesView("map"));
+$("include-skipped-map").addEventListener("change", renderFiles);
+$("map-expand-all").addEventListener("click", () => {
+  for (const el of $("repo-map-tree").querySelectorAll("details.map-folder")) {
+    el.open = true;
+  }
+});
+$("map-collapse-all").addEventListener("click", () => {
+  for (const el of $("repo-map-tree").querySelectorAll("details.map-folder")) {
+    el.open = false;
+  }
+});
 $("close-dialog").addEventListener("click", () => $("file-dialog").close());
 $("file-dialog").addEventListener("click", (event) => {
   if (event.target === $("file-dialog")) $("file-dialog").close();
