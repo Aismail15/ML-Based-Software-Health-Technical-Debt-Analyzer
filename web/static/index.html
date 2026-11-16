@@ -275,8 +275,8 @@ yield { stage: "analyzing" }
             <input
               id="search"
               type="search"
-              aria-label="Dosya adına göre filtrele"
-              placeholder="Dosya ara…"
+              aria-label="Dosya yolu veya bulguya göre filtrele"
+              placeholder="Dosya yolu veya bulgu ara…"
             />
           </div>
           <div class="file-toolbar">
@@ -285,15 +285,30 @@ yield { stage: "analyzing" }
               dosyalar</label
             >
             <label class="sort-label"
+              >Bulgu türü
+              <select id="rule-filter">
+                <option value="all">Tüm bulgular</option>
+                <option value="complex_function">Karmaşık fonksiyon</option>
+                <option value="large_file">Büyük dosya</option>
+                <option value="dense_expressions">Yoğun ifadeler</option>
+                <option value="none">Bulgusuz dosyalar</option>
+              </select></label
+            >
+            <label class="sort-label"
               >Sırala
               <select id="file-sort">
                 <option value="original">Rapor sırası</option>
                 <option value="findings">Bulgu sayısı</option>
-                <option value="complexity">Karmaşıklık</option>
+                <option value="complexity">En yüksek karmaşıklık</option>
+                <option value="loc">Kod satırı (LOC)</option>
+                <option value="risk">Deneysel risk sırası</option>
                 <option value="name">Dosya adı</option>
               </select></label
             >
-            <span id="visible-count" role="status"></span>
+            <button id="clear-filters" class="clear-filters" type="button" hidden>
+              Filtreyi sıfırla
+            </button>
+            <span id="visible-count" role="status" aria-live="polite"></span>
           </div>
           <div class="table-wrap">
             <table>

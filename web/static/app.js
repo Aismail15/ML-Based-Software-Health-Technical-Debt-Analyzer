@@ -35,6 +35,26 @@ const errors = {
   internal_error:
     "Analiz sırasında beklenmeyen bir hata oluştu. Yeniden deneyebilirsin.",
 };
+const ruleMeta = {
+  complex_function: {
+    label: "Karmaşık fonksiyon",
+    suggestion:
+      "Dallanma sayısı yüksek. Fonksiyonu testlerle birlikte daha küçük, anlamlı adımlara ayırmayı değerlendir.",
+  },
+  large_file: {
+    label: "Büyük dosya",
+    suggestion:
+      "Dosyanın farklı sorumluluklarını daha küçük modüllere ayırmayı değerlendir.",
+  },
+  dense_expressions: {
+    label: "Yoğun ifadeler",
+    suggestion:
+      "Karmaşık ifadeleri sadeleştir; ara sonuçlara anlamlı isimler ver.",
+  },
+};
+function ruleLabel(rule) {
+  return ruleMeta[rule]?.label || rule;
+}
 let currentId = null,
   viewVersion = 0,
   pollTimer = null,
@@ -154,6 +174,7 @@ function renderReport(report, job) {
   $("results").hidden = false;
   $("search").value = "";
   $("findings-only").checked = false;
+  $("rule-filter").value = "all";
   $("file-sort").value = "original";
   text("project-name", projectName(report.repository || job.payload.repo_path));
   const status = {
@@ -247,15 +268,40 @@ function renderReport(report, job) {
   text("evaluation", report.model_evaluation || "Değerlendirme bulunmuyor.");
   renderFiles();
 }
+function matchesSearch(file, query) {
+  if (!query) return true;
+  if (file.path.toLocaleLowerCase("tr-TR").includes(query)) return true;
+  return file.result.maintainability_findings.some((finding) => {
+    const haystack = [
+      finding.rule,
+      ruleLabel(finding.rule),
+      finding.reason || "",
+      finding.suggestion || "",
+    ]
+      .join(" ")
+      .toLocaleLowerCase("tr-TR");
+    return haystack.includes(query);
+  });
+}
 function renderFiles() {
-  const query = $("search").value.toLocaleLowerCase("tr-TR");
-  const selected = files.filter(
-    (file) =>
-      file.path.toLocaleLowerCase("tr-TR").includes(query) &&
-      (!$("findings-only").checked ||
-        file.result.maintainability_findings.length > 0),
-  );
+  const query = $("search").value.trim().toLocaleLowerCase("tr-TR");
+  const findingsOnly = $("findings-only").checked;
+  const ruleFilter = $("rule-filter").value;
   const sort = $("file-sort").value;
+  const selected = files.filter((file) => {
+    const fileFindings = file.result.maintainability_findings;
+    if (!matchesSearch(file, query)) return false;
+    if (findingsOnly && fileFindings.length === 0) return false;
+    if (ruleFilter === "none" && fileFindings.length > 0) return false;
+    if (
+      ruleFilter !== "all" &&
+      ruleFilter !== "none" &&
+      !fileFindings.some((finding) => finding.rule === ruleFilter)
+    ) {
+      return false;
+    }
+    return true;
+  });
   if (sort !== "original")
     selected.sort((a, b) => {
       const byName = a.path.localeCompare(b.path, "tr");
@@ -269,8 +315,19 @@ function renderFiles() {
           b.metrics.cyclomatic_complexity_max -
             a.metrics.cyclomatic_complexity_max || byName
         );
+      if (sort === "loc") return b.metrics.loc - a.metrics.loc || byName;
+      if (sort === "risk") {
+        const ra = a.result.risk_score;
+        const rb = b.result.risk_score;
+        if (ra == null && rb == null) return byName;
+        if (ra == null) return 1;
+        if (rb == null) return -1;
+        return rb - ra || byName;
+      }
       return byName;
     });
+  $("clear-filters").hidden =
+    !query && !findingsOnly && ruleFilter === "all" && sort === "original";
   text("visible-count", `${selected.length} / ${files.length} dosya`);
   $("file-rows").replaceChildren();
   $("empty-files").hidden = selected.length > 0;
@@ -345,7 +402,15 @@ function openFile(file) {
 $("close-dialog").addEventListener("click", () => $("file-dialog").close());
 $("search").addEventListener("input", renderFiles);
 $("findings-only").addEventListener("change", renderFiles);
+$("rule-filter").addEventListener("change", renderFiles);
 $("file-sort").addEventListener("change", renderFiles);
+$("clear-filters").addEventListener("click", () => {
+  $("search").value = "";
+  $("findings-only").checked = false;
+  $("rule-filter").value = "all";
+  $("file-sort").value = "original";
+  renderFiles();
+});
 $("refresh").addEventListener("click", async () => {
   try {
     await refreshHistory();
