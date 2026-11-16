@@ -350,6 +350,7 @@ yield { stage: "analyzing" }
         <span class="eyebrow">DOSYA İNCELEMESİ</span
         ><button
           id="close-dialog"
+          type="button"
           class="icon-button"
           aria-label="Ayrıntıları kapat"
         >
@@ -357,7 +358,8 @@ yield { stage: "analyzing" }
         </button>
       </div>
       <h2 id="detail-path"></h2>
-      <p id="detail-metrics" class="muted"></p>
+      <div id="detail-metrics" class="detail-metrics-grid" aria-label="Dosya metrikleri"></div>
+      <p id="detail-risk-note" class="hint"></p>
       <h3>Bakım önerileri</h3>
       <div id="detail-findings"></div>
       <p class="hint">

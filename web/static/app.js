@@ -420,46 +420,85 @@ function renderFiles() {
 }
 function openFile(file) {
   text("detail-path", file.path);
+  const m = file.metrics || {};
+  const metricCards = [
+    ["Kod satırı (LOC)", m.loc ?? "—"],
+    ["Maks. karmaşıklık", m.cyclomatic_complexity_max ?? "—"],
+    [
+      "Ort. karmaşıklık",
+      m.cyclomatic_complexity != null
+        ? Number(m.cyclomatic_complexity).toFixed(2)
+        : "—",
+    ],
+    ["Fonksiyon sayısı", m.num_functions ?? "—"],
+    [
+      "Halstead zorluğu",
+      m.halstead_difficulty != null
+        ? Number(m.halstead_difficulty).toFixed(2)
+        : "—",
+    ],
+    [
+      "Halstead hacmi",
+      m.halstead_volume != null ? Number(m.halstead_volume).toFixed(1) : "—",
+    ],
+    [
+      "Deneysel risk sırası",
+      file.result.risk_score == null
+        ? "Hesaplanamadı"
+        : Number(file.result.risk_score).toFixed(3),
+    ],
+  ];
+  $("detail-metrics").replaceChildren();
+  for (const [label, value] of metricCards) {
+    const card = document.createElement("div");
+    card.className = "detail-metric";
+    const span = document.createElement("span");
+    span.textContent = label;
+    const strong = document.createElement("strong");
+    strong.textContent = String(value);
+    card.append(span, strong);
+    $("detail-metrics").append(card);
+  }
   text(
-    "detail-metrics",
-    `${file.metrics.loc} kod satırı · En yüksek karmaşıklık: ${file.metrics.cyclomatic_complexity_max} · Fonksiyon sayısı: ${file.metrics.num_functions ?? "—"}`,
+    "detail-risk-note",
+    file.result.risk_score_kind === "relative_ranking_not_calibrated_probability"
+      ? "Deneysel risk sırası yalnızca göreli sıralama içindir; kalibre edilmiş hata olasılığı değildir."
+      : "Bu analizde risk sıralaması hesaplanamadı; aşağıdaki bakım bulguları kural temellidir.",
   );
   $("detail-findings").replaceChildren();
-  const translations = {
-    complex_function: [
-      "Karmaşık fonksiyon",
-      "Dallanma sayısı yüksek. Fonksiyonu testlerle birlikte daha küçük, anlamlı adımlara ayırmayı değerlendir.",
-    ],
-    large_file: [
-      "Büyük dosya",
-      "Dosyanın farklı sorumluluklarını daha küçük modüllere ayırmayı değerlendir.",
-    ],
-    dense_expressions: [
-      "Yoğun ifadeler",
-      "Karmaşık ifadeleri sadeleştir; ara sonuçlara anlamlı isimler ver.",
-    ],
-  };
   for (const finding of file.result.maintainability_findings) {
     const box = document.createElement("div");
     box.className = "finding";
-    const title = document.createElement("strong"),
-      p = document.createElement("p");
-    title.textContent = translations[finding.rule]?.[0] || finding.rule;
-    p.textContent = translations[finding.rule]?.[1] || finding.suggestion;
-    box.append(title, p);
+    const head = document.createElement("div");
+    head.className = "finding-head";
+    const badge = document.createElement("span");
+    badge.className = `rule-badge rule-${finding.rule}`;
+    badge.textContent = ruleLabel(finding.rule);
+    const code = document.createElement("code");
+    code.textContent = finding.rule;
+    head.append(badge, code);
+    const suggestion = document.createElement("p");
+    suggestion.className = "finding-suggestion";
+    suggestion.textContent =
+      finding.suggestion || ruleMeta[finding.rule]?.suggestion || "";
     const evidence = document.createElement("p");
+    evidence.className = "finding-evidence";
     evidence.textContent = finding.reason;
-    box.append(evidence);
+    box.append(head, suggestion, evidence);
     $("detail-findings").append(box);
   }
   if (!file.result.maintainability_findings.length) {
     const p = document.createElement("p");
+    p.className = "muted";
     p.textContent = "Bu dosyada mevcut kurallara göre bakım bulgusu yok.";
     $("detail-findings").append(p);
   }
   $("file-dialog").showModal();
 }
 $("close-dialog").addEventListener("click", () => $("file-dialog").close());
+$("file-dialog").addEventListener("click", (event) => {
+  if (event.target === $("file-dialog")) $("file-dialog").close();
+});
 $("search").addEventListener("input", renderFiles);
 $("findings-only").addEventListener("change", renderFiles);
 $("rule-filter").addEventListener("change", renderFiles);
