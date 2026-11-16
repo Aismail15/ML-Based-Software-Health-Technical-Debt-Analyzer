@@ -332,29 +332,89 @@ function renderFiles() {
   $("file-rows").replaceChildren();
   $("empty-files").hidden = selected.length > 0;
   for (const file of selected) {
-    const row = document.createElement("tr"),
-      cell = document.createElement("td"),
-      button = document.createElement("button");
+    const fileFindings = file.result.maintainability_findings;
+    const row = document.createElement("tr");
+    row.className =
+      fileFindings.length > 0 ? "file-row has-findings-row" : "file-row";
+    row.addEventListener("click", (event) => {
+      if (event.target.closest("button") || window.getSelection()?.toString()) {
+        return;
+      }
+      openFile(file);
+    });
+
+    const pathCell = document.createElement("td");
+    pathCell.dataset.label = "Dosya yolu";
+    const button = document.createElement("button");
+    button.type = "button";
     button.className = "file-button";
     button.textContent = file.path;
     button.addEventListener("click", () => openFile(file));
-    cell.append(button);
-    row.append(cell);
-    const values = [
-      file.result.risk_score == null
-        ? "Hesaplanamadı"
-        : Number(file.result.risk_score).toFixed(3),
-      file.metrics.loc,
-      file.metrics.cyclomatic_complexity_max,
-      file.result.maintainability_findings.length,
-    ];
-    for (const value of values) {
-      const td = document.createElement("td");
-      td.textContent = value;
-      row.append(td);
+    pathCell.append(button);
+
+    const typeCell = document.createElement("td");
+    typeCell.dataset.label = "Bulgu türü";
+    const badgeWrap = document.createElement("div");
+    badgeWrap.className = "rule-badges";
+    if (fileFindings.length === 0) {
+      const clean = document.createElement("span");
+      clean.className = "rule-badge rule-clean";
+      clean.textContent = "Bulgu yok";
+      badgeWrap.append(clean);
+    } else {
+      for (const finding of fileFindings) {
+        const badge = document.createElement("span");
+        badge.className = `rule-badge rule-${finding.rule}`;
+        badge.textContent = ruleLabel(finding.rule);
+        badgeWrap.append(badge);
+      }
     }
-    if (file.result.maintainability_findings.length > 0)
-      row.lastElementChild.className = "has-findings";
+    typeCell.append(badgeWrap);
+
+    const metricsCell = document.createElement("td");
+    metricsCell.dataset.label = "İlgili metrikler";
+    const metricsWrap = document.createElement("div");
+    metricsWrap.className = "row-metrics";
+    const riskText =
+      file.result.risk_score == null
+        ? "Risk: Hesaplanamadı"
+        : `Risk sırası: ${Number(file.result.risk_score).toFixed(3)}`;
+    for (const item of [
+      `LOC: ${file.metrics.loc}`,
+      `Maks. karmaşıklık: ${file.metrics.cyclomatic_complexity_max}`,
+      riskText,
+    ]) {
+      const chip = document.createElement("span");
+      chip.className = "metric-chip";
+      chip.textContent = item;
+      metricsWrap.append(chip);
+    }
+    metricsCell.append(metricsWrap);
+
+    const suggestionCell = document.createElement("td");
+    suggestionCell.dataset.label = "Öneri";
+    suggestionCell.className = "suggestion-cell";
+    if (fileFindings.length === 0) {
+      const empty = document.createElement("span");
+      empty.className = "muted";
+      empty.textContent = "—";
+      suggestionCell.append(empty);
+    } else {
+      const primary = fileFindings[0];
+      const textWrap = document.createElement("span");
+      textWrap.className = "suggestion-text";
+      textWrap.textContent =
+        primary.suggestion || ruleMeta[primary.rule]?.suggestion || "—";
+      suggestionCell.append(textWrap);
+      if (fileFindings.length > 1) {
+        const more = document.createElement("span");
+        more.className = "more-findings";
+        more.textContent = `+${fileFindings.length - 1} ek öneri`;
+        suggestionCell.append(more);
+      }
+    }
+
+    row.append(pathCell, typeCell, metricsCell, suggestionCell);
     $("file-rows").append(row);
   }
 }
