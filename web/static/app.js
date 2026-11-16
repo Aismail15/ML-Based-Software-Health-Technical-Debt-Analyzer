@@ -965,6 +965,85 @@ function openFile(file) {
   }
   $("file-dialog").showModal();
 }
+function createTreeNode(name, path) {
+  return {
+    name,
+    path,
+    folders: new Map(),
+    files: [],
+    analyzedCount: 0,
+    skippedCount: 0,
+    findingCount: 0,
+    findingsFilesCount: 0,
+  };
+}
+function insertIntoRepoTree(root, rawPath, entry) {
+  const normalized = (rawPath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  const parts = normalized.split("/").filter(Boolean);
+  if (!parts.length) return;
+  let current = root;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const segment = parts[i];
+    const folderPath = parts.slice(0, i + 1).join("/");
+    if (!current.folders.has(segment)) {
+      current.folders.set(segment, createTreeNode(segment, folderPath));
+    }
+    current = current.folders.get(segment);
+  }
+  current.files.push({
+    name: parts[parts.length - 1],
+    path: normalized,
+    ...entry,
+  });
+}
+function finalizeRepoTree(node) {
+  const sortedFolders = Array.from(node.folders.values())
+    .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+    .map(finalizeRepoTree);
+  const sortedFiles = [...node.files].sort((a, b) =>
+    a.name.localeCompare(b.name, "tr"),
+  );
+  let analyzedCount = 0;
+  let skippedCount = 0;
+  let findingCount = 0;
+  let findingsFilesCount = 0;
+  for (const child of sortedFolders) {
+    analyzedCount += child.analyzedCount;
+    skippedCount += child.skippedCount;
+    findingCount += child.findingCount;
+    findingsFilesCount += child.findingsFilesCount;
+  }
+  for (const fileEntry of sortedFiles) {
+    if (fileEntry.kind === "analyzed") {
+      analyzedCount += 1;
+      const count = fileEntry.file.result.maintainability_findings.length;
+      findingCount += count;
+      if (count > 0) findingsFilesCount += 1;
+    } else {
+      skippedCount += 1;
+    }
+  }
+  return {
+    name: node.name,
+    path: node.path,
+    folders: sortedFolders,
+    files: sortedFiles,
+    analyzedCount,
+    skippedCount,
+    findingCount,
+    findingsFilesCount,
+  };
+}
+function buildRepoTree(analyzedFiles, skippedList) {
+  const root = createTreeNode("Kök dizin", "");
+  for (const file of analyzedFiles || []) {
+    insertIntoRepoTree(root, file.path, { kind: "analyzed", file });
+  }
+  for (const item of skippedList || []) {
+    insertIntoRepoTree(root, item.path, { kind: "skipped", skipped: item });
+  }
+  return finalizeRepoTree(root);
+}
 function setFilesView(view) {
   activeView = view === "map" ? "map" : "list";
   $("view-list").setAttribute("aria-selected", String(activeView === "list"));
