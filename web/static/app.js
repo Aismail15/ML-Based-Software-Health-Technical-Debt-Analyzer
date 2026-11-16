@@ -1044,6 +1044,144 @@ function buildRepoTree(analyzedFiles, skippedList) {
   }
   return finalizeRepoTree(root);
 }
+function renderMapLegend() {
+  const items = [
+    ["rule-complex_function", "Karmaşık fonksiyon"],
+    ["rule-large_file", "Büyük dosya"],
+    ["rule-dense_expressions", "Yoğun ifadeler"],
+    ["rule-clean", "Bulgu yok"],
+    ["map-skipped-badge", "Atlandı (analiz edilmedi)"],
+  ];
+  $("map-legend").replaceChildren();
+  for (const [cls, label] of items) {
+    const badge = document.createElement("span");
+    badge.className = `rule-badge ${cls}`;
+    badge.textContent = label;
+    $("map-legend").append(badge);
+  }
+}
+function renderMapFileEntry(entry) {
+  if (entry.kind === "skipped") {
+    const box = document.createElement("div");
+    box.className = "map-file map-file-skipped";
+    const main = document.createElement("div");
+    main.className = "map-file-main";
+    const name = document.createElement("code");
+    name.className = "map-file-name";
+    name.textContent = entry.name;
+    name.title = entry.path;
+    const badge = document.createElement("span");
+    badge.className = "rule-badge map-skipped-badge";
+    badge.textContent = "Atlandı · Analiz edilmedi";
+    main.append(name, badge);
+    const meta = document.createElement("div");
+    meta.className = "map-file-meta";
+    meta.textContent = `Neden: ${reasons[entry.skipped.reason] || entry.skipped.reason}`;
+    box.append(main, meta);
+    return box;
+  }
+  const file = entry.file;
+  const findings = file.result.maintainability_findings;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className =
+    findings.length > 0
+      ? `map-file map-file-findings map-rule-${findings[0].rule}`
+      : "map-file map-file-clean";
+  button.setAttribute(
+    "aria-label",
+    `${entry.path}, ${findings.length > 0 ? `${findings.length} bakım bulgusu` : "bulgu yok"}`,
+  );
+  button.addEventListener("click", () => openFile(file));
+  const main = document.createElement("div");
+  main.className = "map-file-main";
+  const name = document.createElement("code");
+  name.className = "map-file-name";
+  name.textContent = entry.name;
+  name.title = entry.path;
+  const badges = document.createElement("div");
+  badges.className = "rule-badges";
+  if (findings.length === 0) {
+    const clean = document.createElement("span");
+    clean.className = "rule-badge rule-clean";
+    clean.textContent = "Bulgu yok";
+    badges.append(clean);
+  } else {
+    for (const finding of findings) {
+      const badge = document.createElement("span");
+      badge.className = `rule-badge rule-${finding.rule}`;
+      badge.textContent = ruleLabel(finding.rule);
+      badges.append(badge);
+    }
+  }
+  main.append(name, badges);
+  const meta = document.createElement("div");
+  meta.className = "map-file-meta";
+  meta.textContent = `LOC: ${file.metrics.loc} · Maks. karmaşıklık: ${file.metrics.cyclomatic_complexity_max}`;
+  button.append(main, meta);
+  return button;
+}
+function renderMapFolder(folder, depth, expandAll) {
+  const details = document.createElement("details");
+  details.className = "map-folder";
+  if (expandAll || depth < 2) details.open = true;
+  const summary = document.createElement("summary");
+  summary.className = "map-folder-summary";
+  const titleWrap = document.createElement("span");
+  titleWrap.className = "map-folder-name";
+  titleWrap.textContent = `📁 ${folder.name}`;
+  titleWrap.title = folder.path || folder.name;
+  const stats = document.createElement("div");
+  stats.className = "map-folder-stats";
+  const fileStat = document.createElement("span");
+  fileStat.className = "meta-chip";
+  fileStat.textContent = `${folder.analyzedCount} dosya`;
+  stats.append(fileStat);
+  if (folder.skippedCount > 0) {
+    const skipStat = document.createElement("span");
+    skipStat.className = "meta-chip";
+    skipStat.textContent = `${folder.skippedCount} atlandı`;
+    stats.append(skipStat);
+  }
+  if (folder.analyzedCount > 0) {
+    const findingStat = document.createElement("span");
+    findingStat.className =
+      folder.findingCount > 0
+        ? "rule-badge rule-complex_function"
+        : "rule-badge rule-clean";
+    findingStat.textContent =
+      folder.findingCount > 0 ? `${folder.findingCount} bulgu` : "Bulgu yok";
+    stats.append(findingStat);
+  } else {
+    const unanalyzedStat = document.createElement("span");
+    unanalyzedStat.className = "rule-badge map-skipped-badge";
+    unanalyzedStat.textContent = "Analiz edilmedi";
+    stats.append(unanalyzedStat);
+  }
+  summary.append(titleWrap, stats);
+  const children = document.createElement("div");
+  children.className = "map-folder-children";
+  for (const sub of folder.folders) {
+    children.append(renderMapFolder(sub, depth + 1, expandAll));
+  }
+  for (const entry of folder.files) {
+    children.append(renderMapFileEntry(entry));
+  }
+  details.append(summary, children);
+  return details;
+}
+function renderRepoMap(analyzedFiles, skippedList, { expandAll = false } = {}) {
+  renderMapLegend();
+  const tree = buildRepoTree(analyzedFiles, skippedList);
+  const container = $("repo-map-tree");
+  container.replaceChildren();
+  for (const folder of tree.folders) {
+    container.append(renderMapFolder(folder, 0, expandAll));
+  }
+  for (const entry of tree.files) {
+    container.append(renderMapFileEntry(entry));
+  }
+}
 function setFilesView(view) {
   activeView = view === "map" ? "map" : "list";
   $("view-list").setAttribute("aria-selected", String(activeView === "list"));
