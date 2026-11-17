@@ -513,8 +513,21 @@ progress {
   accent-color: #85edb1;
 }
 .error {
-  background: #411e22;
-  color: #ffd0c7;
+  background: #3d1b20;
+  color: #ffd8d1;
+  border: 1px solid #e8847759;
+  border-left: 3px solid #e88477;
+}
+.empty-message {
+  color: #b4cebd;
+}
+.view-tab:focus-visible,
+.map-file:focus-visible,
+.map-folder-summary:focus-visible,
+.file-button:focus-visible,
+.compare-toggle:focus-visible {
+  outline: 2px solid #83efb0;
+  outline-offset: 2px;
 }
 .detail-section ul,
 pre {
@@ -615,5 +628,16 @@ dialog::backdrop {
   }
   .journey {
     padding-inline: 16px;
+  }
+  .job-stages {
+    gap: 6px;
+  }
+  .job-stage {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  .downloads {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }
