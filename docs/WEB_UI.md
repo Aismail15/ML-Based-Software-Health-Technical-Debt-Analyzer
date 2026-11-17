@@ -1,5 +1,13 @@
 # Phase 4.2 — browser interface
 
+## Studio results, comparison, repo map & scroll experience — 2026-11-18
+
+- **Results & file triage:** Added scan metadata chips, warning banners, training revision summary, finding-type filter (`complex_function`, `large_file`, `dense_expressions`, or no-findings), `LOC`/risk sorting, full-row click targets with rule badges and API suggestions, and an expanded file detail dialog displaying all extracted metrics without inventing calibrated probabilities or unified health scores.
+- **Same-repository history comparison:** Added comparison selection mode in the sidebar for two `succeeded` scans of the same normalized repository path. Matched files compare `(path, rule)` findings (newly appearing, no longer present, and persisting metric deltas), while files present in only one report are explicitly marked non-comparable (`Karşılaştırılamıyor`).
+- **Repo Map view:** Added a `Liste` / `Repo haritası` view switcher building a nested folder tree from `files` and `skipped_files`, with an explicit rule legend, folder file/finding counts, search/filter integration, and clear separation between clean files (`Bulgu yok`) and skipped files (`Atlandı`).
+- **Scroll reveal & flow indicator:** Added `IntersectionObserver`-based section reveals (`data-scroll-reveal`), a dynamic sticky section flow indicator (`#scroll-flow-nav`) reflecting only currently visible sections, decorative `.signal-art` step highlights, and full integration with `prefers-reduced-motion` and the topbar motion toggle (`codescope:motion-change`).
+- **Verification:** `51` Python `unittest` cases passed (`tests/test_web.py` and core suites).
+
 ## Emerald glass refinement — 2026-10-04
 
 The current theme supersedes the copper palette below: dark emerald surfaces,
