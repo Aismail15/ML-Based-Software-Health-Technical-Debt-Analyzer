@@ -31,6 +31,11 @@
       ? "Sistem hareket azaltma tercihi etkin"
       : "Arka plan hareketini aç veya kapat";
     clearLight();
+    document.dispatchEvent(
+      new CustomEvent("codescope:motion-change", {
+        detail: { paused: paused || reduced.matches },
+      }),
+    );
   }
   toggle.addEventListener("click", () => {
     paused = !paused;

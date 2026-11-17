@@ -345,6 +345,14 @@ function initScrollReveal() {
   );
   observeScrollReveals(document);
 }
+document.addEventListener("codescope:motion-change", (event) => {
+  if (event.detail?.paused) revealAllImmediately();
+  else observeScrollReveals(document);
+});
+window.addEventListener("pagehide", () => {
+  revealObserver?.disconnect();
+  sectionObserver?.disconnect();
+});
 function revealSection(el) {
   el.classList.remove("panel-enter");
   void el.offsetWidth;
