@@ -134,6 +134,12 @@ yield { stage: "analyzing" }
           ><span class="pill">PYTHON · YEREL</span>
         </div>
       </header>
+      <nav
+        id="scroll-flow-nav"
+        class="scroll-flow-nav"
+        aria-label="Sayfa bölümleri"
+        hidden
+      ></nav>
       <section class="intro">
         <div class="intro-copy">
           <div class="eyebrow">YAZILIM SAĞLIĞI / ANALİZ STÜDYOSU</div>
@@ -172,6 +178,7 @@ yield { stage: "analyzing" }
         id="new-scan"
         class="card scan-card"
         aria-labelledby="scan-title"
+        data-scroll-reveal
       >
         <div class="section-heading">
           <div>
@@ -228,7 +235,7 @@ yield { stage: "analyzing" }
         </form>
         <p id="form-error" class="error" role="alert" hidden></p>
       </section>
-      <section id="job-panel" class="card job-panel" hidden aria-live="polite">
+      <section id="job-panel" class="card job-panel" hidden aria-live="polite" data-scroll-reveal>
         <div class="job-line">
           <h2 id="job-title">Analiz hazırlanıyor</h2>
           <span id="job-state" class="pill"></span>
@@ -247,7 +254,7 @@ yield { stage: "analyzing" }
           aria-label="Geçerli analiz adımının ilerlemesi"
         ></progress>
       </section>
-      <section id="welcome" class="welcome">
+      <section id="welcome" class="welcome" data-scroll-reveal>
         <div class="welcome-heading">
           <span class="eyebrow">NASIL ÇALIŞIR?</span>
           <h2>Üç adımda daha net bir bakış.</h2>
@@ -284,7 +291,7 @@ yield { stage: "analyzing" }
           </div>
         </div>
         <div id="scan-warnings" class="warnings-list" hidden aria-live="polite"></div>
-        <div class="stats">
+        <div class="stats" data-scroll-reveal>
           <div class="card stat">
             <span>İncelenen dosya</span><strong id="file-count">0</strong
             ><small id="file-count-detail">Mevcut Python dosyaları</small>
@@ -303,7 +310,7 @@ yield { stage: "analyzing" }
           </div>
         </div>
         <div id="model-notice" class="notice"></div>
-        <section class="card files-card">
+        <section id="files-section" class="card files-card" data-scroll-reveal>
           <div class="section-heading">
             <div>
               <h2>Dosyalara yakından bak</h2>
@@ -404,11 +411,11 @@ yield { stage: "analyzing" }
             Bu seçimde gösterilecek dosya yok.
           </p>
         </section>
-        <details class="card detail-section">
+        <details id="results-details" class="card detail-section" data-scroll-reveal>
           <summary>Atlanan dosyalar ve nedenleri</summary>
           <ul id="skipped-list"></ul>
         </details>
-        <details class="card detail-section">
+        <details id="results-details" class="card detail-section" data-scroll-reveal>
           <summary>Model değerlendirmesi</summary>
           <p class="hint">
             Skorlar hata olasılığı değildir. Ayrıntılı araştırma çıktıları
@@ -430,9 +437,9 @@ yield { stage: "analyzing" }
             </button>
           </div>
         </div>
-        <div id="compare-dates" class="compare-dates-grid"></div>
+        <div id="compare-dates" class="compare-dates-grid" data-scroll-reveal></div>
         <div id="compare-warnings" class="warnings-list" hidden aria-live="polite"></div>
-        <div class="stats compare-stats">
+        <div class="stats compare-stats" data-scroll-reveal>
           <div class="card stat">
             <span>Yeni ortaya çıkan</span><strong id="cmp-added-count">0</strong
             ><small>Eşleşen dosyalarda yeni bulgular</small>
@@ -450,7 +457,7 @@ yield { stage: "analyzing" }
             ><small>Yalnızca tek raporda analiz edilen dosya</small>
           </div>
         </div>
-        <section class="card compare-section" aria-labelledby="cmp-added-title">
+        <section class="card compare-section" aria-labelledby="cmp-added-title" data-scroll-reveal>
           <div class="section-heading">
             <div>
               <h2 id="cmp-added-title">Yeni ortaya çıkan bulgular</h2>
@@ -459,7 +466,7 @@ yield { stage: "analyzing" }
           </div>
           <div id="cmp-added-list" class="diff-list"></div>
         </section>
-        <section class="card compare-section" aria-labelledby="cmp-removed-title">
+        <section class="card compare-section" aria-labelledby="cmp-removed-title" data-scroll-reveal>
           <div class="section-heading">
             <div>
               <h2 id="cmp-removed-title">Önceki rapora göre artık görünmeyen bulgular</h2>
@@ -468,7 +475,7 @@ yield { stage: "analyzing" }
           </div>
           <div id="cmp-removed-list" class="diff-list"></div>
         </section>
-        <section class="card compare-section" aria-labelledby="cmp-persisting-title">
+        <section id="cmp-persisting-section" class="card compare-section" aria-labelledby="cmp-persisting-title" data-scroll-reveal>
           <div class="section-heading">
             <div>
               <h2 id="cmp-persisting-title">İki raporda da bulunan bulgular ve metrik değişimleri</h2>
@@ -494,7 +501,7 @@ yield { stage: "analyzing" }
             İki raporda da ortak süren bulgu yok.
           </p>
         </section>
-        <section class="card compare-section" aria-labelledby="cmp-unmatched-title">
+        <section class="card compare-section" aria-labelledby="cmp-unmatched-title" data-scroll-reveal>
           <div class="section-heading">
             <div>
               <h2 id="cmp-unmatched-title">Eşleşmeyen dosyalar (karşılaştırılamıyor)</h2>
