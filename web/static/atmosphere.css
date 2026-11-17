@@ -1,11 +1,18 @@
 /* Emerald glass theme. Code streams are illustrative, never live telemetry. */
 :root {
   color-scheme: dark;
-  color: #e2f3eb;
-  background: #071510;
+  color: #e4f4ec;
+  background: #06130e;
   --accent: #75e6ac;
-  --muted: #a3bcb0;
-  --line: #9cddbd26;
+  --accent-strong: #94f5be;
+  --accent-soft: #75e6ac1a;
+  --muted: #9eb9ab;
+  --line: #9cddbd24;
+  --line-strong: #9cddbd42;
+  --surface: #0e2219c7;
+  --surface-strong: #122a1fe0;
+  --surface-inset: #081811c9;
+  --mono: Consolas, "Cascadia Mono", "SFMono-Regular", monospace;
   --pointer-x: 50vw;
   --pointer-y: 30vh;
 }
@@ -76,24 +83,25 @@ main {
   position: relative;
 }
 .sidebar {
-  background: #081911d9;
-  backdrop-filter: blur(20px);
+  background: #071710e0;
+  backdrop-filter: blur(22px);
   border-right: 1px solid var(--line);
 }
 .card,
 .signal-art {
-  background: #11251bbd;
-  border-color: #b3f4cf2b;
+  background: var(--surface);
+  border-color: var(--line);
   backdrop-filter: blur(16px);
   box-shadow:
-    inset 0 1px #c4ffdf10,
-    0 14px 40px #0000001c;
+    inset 0 1px #c4ffdf12,
+    0 14px 36px #00000024;
 }
 .scan-card {
-  background: linear-gradient(120deg, #183a2ad6, #10241bbd);
+  background: linear-gradient(135deg, #163627de, #0e2118d4);
+  border-color: var(--line-strong);
 }
 .card:hover {
-  border-color: #9fe5bc4d;
+  border-color: #9fe5bc45;
 }
 .intro {
   padding-block: 50px;
@@ -205,8 +213,7 @@ h1 span,
   box-shadow: 0 0 12px #68edaa55;
 }
 .signal-art {
-  transform: rotate(-2deg);
-  background: #0d2018b8;
+  background: linear-gradient(160deg, #0d2118cc, #081710e6);
 }
 .signal-caption,
 .signal-bottom,
@@ -245,19 +252,26 @@ input:focus,
 }
 .primary {
   background: #85edb1;
-  color: #092416;
-  box-shadow: 0 3px 20px #56e99519;
+  color: #072113;
+  box-shadow: 0 4px 18px #56e99522;
 }
-.primary:hover {
-  background: #acf9c9;
+.primary:hover:not(:disabled) {
+  background: #a5f8c6;
+  box-shadow: 0 6px 22px #56e99533;
+}
+.primary:active:not(:disabled),
+.secondary:active:not(:disabled),
+.clear-filters:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .secondary {
-  color: #cee8d9;
-  background: #163021;
-  border-color: #8bd4ab38;
+  color: #d6eee1;
+  background: #142c1f;
+  border-color: var(--line-strong);
 }
-.secondary:hover {
+.secondary:hover:not(:disabled) {
   color: #a0f3bd;
+  background: #193727;
   border-color: #78e5a2;
 }
 .advanced,

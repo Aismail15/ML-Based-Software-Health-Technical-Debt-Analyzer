@@ -75,8 +75,7 @@ a {
   color: #e6e3dd;
   border-radius: 14px;
   padding: 24px;
-  transform: rotate(-2deg);
-  box-shadow: 8px 12px 0 #e8e4db;
+  border: 1px solid var(--line);
 }
 .signal-caption,
 .signal-bottom {
