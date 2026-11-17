@@ -54,6 +54,23 @@
 .journey.story-steps article.story-step + article.story-step {
   border-left: 3px solid #75e6ac50;
 }
+.journey.story-steps article.story-step.is-story-active {
+  border-color: #83efb09c;
+  border-left-color: #83efb0;
+  background:
+    radial-gradient(ellipse at 100% 0%, #75e6ac20, transparent 58%),
+    linear-gradient(145deg, #143425e8, #0b1b13ef);
+  box-shadow:
+    inset 0 1px #c4ffdf18,
+    0 24px 76px #00000035,
+    0 0 48px #75e6ac0c;
+  opacity: 1;
+  transform: scale(1);
+}
+.journey.story-steps article.story-step.is-story-past {
+  opacity: 0.86;
+  transform: scale(0.99);
+}
 .journey.story-steps .story-step > span {
   position: relative;
   z-index: 1;
@@ -117,6 +134,34 @@
   box-shadow: 0 0 14px #75e6ac99;
   transform: scaleX(0);
   transform-origin: left center;
+}
+.story-console .signal-row.is-story-current {
+  border-color: #83efb0;
+  background: #65ec9f24;
+  color: #f0fff5;
+  box-shadow: 0 0 24px #75e6ac12;
+}
+.story-console .signal-row.is-story-complete {
+  border-color: #75e6ac72;
+  color: #b9e7ca;
+}
+.story-console .signal-connector {
+  position: relative;
+  overflow: hidden;
+}
+.story-console .signal-connector::after {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: linear-gradient(#a6ffd0, #75e6ac);
+  box-shadow: 0 0 8px #75e6ac;
+  content: "";
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.story-console .signal-connector.is-story-complete::after {
+  transform: scaleY(1);
 }
 #scroll-flow-nav {
   position: sticky;
