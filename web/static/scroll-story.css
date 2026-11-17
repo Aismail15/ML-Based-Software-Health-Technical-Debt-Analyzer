@@ -186,6 +186,14 @@
   overflow-y: hidden;
   scrollbar-width: none;
 }
+#scroll-flow-nav::-webkit-scrollbar {
+  display: none;
+}
+#scroll-flow-nav a {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+}
 #scroll-flow-nav::after {
   position: absolute;
   right: auto;
@@ -268,8 +276,17 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .journey.story-steps article.story-step,
-  .story-progress span {
+  .story-progress span,
+  .story-console .signal-connector::after,
+  .story-console .signal-row {
     transition: none;
+  }
+  .story-console .signal-row.is-story-current .signal-point {
+    animation: none;
+  }
+  .story-progress span,
+  #scroll-flow-nav::after {
+    display: none;
   }
   .journey.story-steps article.story-step {
     opacity: 1;
@@ -280,4 +297,21 @@
   opacity: 1;
   transform: none;
   transition: none;
+}
+:root.motion-paused .story-progress span {
+  transform: scaleX(0) !important;
+}
+:root.motion-paused #scroll-flow-nav::after {
+  display: none;
+}
+:root.motion-paused .story-console .signal-point {
+  animation: none !important;
+}
+@media (max-height: 540px) and (min-width: 1001px) {
+  .story-console {
+    top: 76px;
+  }
+  .journey.story-steps article.story-step {
+    min-height: min(64svh, 390px);
+  }
 }
