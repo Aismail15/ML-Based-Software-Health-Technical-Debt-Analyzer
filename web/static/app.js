@@ -190,6 +190,11 @@ let currentId = null,
 function text(id, value) {
   $(id).textContent = value;
 }
+function revealSection(el) {
+  el.classList.remove("panel-enter");
+  void el.offsetWidth;
+  el.classList.add("panel-enter");
+}
 function projectName(path) {
   return path.replace(/\\/g, "/").replace(/\/$/, "").split("/").pop() || path;
 }
@@ -294,6 +299,8 @@ function renderHistory(jobs) {
     if (compareMode) {
       button.setAttribute("aria-pressed", String(isSelected));
       button.disabled = !isCompatible && !isSelected;
+    } else if (job.id === currentId) {
+      button.setAttribute("aria-current", "true");
     }
     const name = document.createElement("strong");
     name.textContent = projectName(job.payload?.repo_path || "Proje");
@@ -584,6 +591,7 @@ function renderComparison(diff) {
   $("results").hidden = true;
   $("form-error").hidden = true;
   $("compare-view").hidden = false;
+  revealSection($("compare-view"));
 
   const repoDisplay =
     diff.newerReport.repository ||
@@ -671,6 +679,7 @@ function renderReport(report, job) {
   files = report.files || [];
   skippedFiles = report.skipped_files || [];
   $("results").hidden = false;
+  revealSection($("results"));
   $("search").value = "";
   $("findings-only").checked = false;
   $("rule-filter").value = "all";
@@ -1239,6 +1248,7 @@ function setFilesView(view) {
   $("view-map").setAttribute("aria-selected", String(activeView === "map"));
   $("list-view").hidden = activeView !== "list";
   $("repo-map-view").hidden = activeView !== "map";
+  revealSection(activeView === "map" ? $("repo-map-view") : $("list-view"));
   renderFiles();
 }
 $("view-list").addEventListener("click", () => setFilesView("list"));
