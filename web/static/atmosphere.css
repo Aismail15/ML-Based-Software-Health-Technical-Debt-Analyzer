@@ -297,11 +297,20 @@ input:focus,
   color: #f3dfb6;
   border-color: #e4b45e;
 }
+.stat {
+  border-top: 2px solid #75e6ac3d;
+}
+.stat strong {
+  color: #ecfff3;
+}
+.compare-date-card {
+  border-left: 3px solid #75e6ac66;
+}
 .meta-chip,
 .metric-chip,
 .detail-metric {
-  background: #0b201799;
-  border-color: #8fd6aa2b;
+  background: var(--surface-inset);
+  border-color: var(--line);
   color: #b7d6c5;
 }
 .detail-metric strong {
@@ -445,7 +454,14 @@ td {
 }
 tbody tr:hover,
 .file-row:focus-within {
-  background: #85edb10a;
+  background: #85edb10f;
+}
+.file-row td:first-child {
+  border-left: 2px solid transparent;
+}
+.file-row:hover td:first-child,
+.file-row:focus-within td:first-child {
+  border-left-color: #7ee8ab;
 }
 .file-button {
   color: #c4edcf;
@@ -521,7 +537,9 @@ dialog::backdrop {
   backdrop-filter: blur(7px);
 }
 .finding {
-  background: #1a3526;
+  background: #173022;
+  border: 1px solid var(--line);
+  border-left: 3px solid #7ee8ab80;
 }
 .finding p {
   color: #b4cebd;
