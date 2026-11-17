@@ -8,3 +8,14 @@ Thank you for considering contributing to ML-Based Software Health & Technical D
 3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
 4. Push to the branch (`git push origin feature/amazing-feature`).
 5. Open a Pull Request referencing the related Issue.
+
+## Local Verification
+Run the test suite before opening a Pull Request:
+```powershell
+python -m unittest discover -s tests -q
+```
+
+Start the local CodeScope web UI for manual checks:
+```powershell
+python -m web --port 8765
+```
