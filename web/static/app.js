@@ -191,6 +191,107 @@ function text(id, value) {
   $(id).textContent = value;
 }
 let revealObserver = null;
+let sectionObserver = null;
+let currentFlowStep = null;
+function getVisibleFlowSections() {
+  const items = [{ id: "new-scan", label: "Analiz", signalStep: 0 }];
+  if (!$("job-panel").hidden) {
+    items.push({ id: "job-panel", label: "Durum", signalStep: 1 });
+  }
+  if (!$("welcome").hidden) {
+    items.push({ id: "welcome", label: "Nasıl çalışır", signalStep: 1 });
+  }
+  if (!$("results").hidden) {
+    items.push({ id: "results", label: "Özet", signalStep: 1 });
+    items.push({
+      id: "files-section",
+      label: activeView === "map" ? "Repo haritası" : "Bulgular",
+      signalStep: 2,
+    });
+    items.push({ id: "results-details", label: "Değerlendirme", signalStep: 2 });
+  }
+  if (!$("compare-view").hidden) {
+    items.push({ id: "compare-view", label: "Karşılaştırma", signalStep: 2 });
+    items.push({
+      id: "cmp-persisting-section",
+      label: "Metrik değişimleri",
+      signalStep: 2,
+    });
+  }
+  return items;
+}
+function syncSignalHighlight(stepIndex) {
+  const rows = document.querySelectorAll(".signal-art .signal-row");
+  rows.forEach((row, idx) => {
+    row.classList.toggle("is-scroll-highlighted", idx === stepIndex);
+  });
+}
+function setActiveFlowSection(id, signalStep = 0) {
+  currentFlowStep = id;
+  for (const link of $("scroll-flow-nav").querySelectorAll("a")) {
+    const active = link.dataset.target === id;
+    link.classList.toggle("is-active", active);
+    if (active) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
+  }
+  syncSignalHighlight(signalStep);
+}
+function refreshScrollFlowNav() {
+  if (sectionObserver) {
+    sectionObserver.disconnect();
+    sectionObserver = null;
+  }
+  const sections = getVisibleFlowSections();
+  const nav = $("scroll-flow-nav");
+  nav.replaceChildren();
+  nav.hidden = sections.length < 2;
+  if (sections.length < 2) return;
+  for (let i = 0; i < sections.length; i += 1) {
+    const sec = sections[i];
+    if (i > 0) {
+      const sep = document.createElement("span");
+      sep.className = "flow-sep";
+      sep.setAttribute("aria-hidden", "true");
+      sep.textContent = "→";
+      nav.append(sep);
+    }
+    const link = document.createElement("a");
+    link.href = `#${sec.id}`;
+    link.dataset.target = sec.id;
+    link.textContent = sec.label;
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const target = $(sec.id);
+      if (!target) return;
+      target.scrollIntoView({
+        behavior: isMotionReduced() ? "auto" : "smooth",
+        block: "start",
+      });
+      setActiveFlowSection(sec.id, sec.signalStep);
+    });
+    nav.append(link);
+  }
+  const activeSec =
+    sections.find((s) => s.id === currentFlowStep) || sections[0];
+  setActiveFlowSection(activeSec.id, activeSec.signalStep);
+  if (!("IntersectionObserver" in window)) return;
+  const stepMap = new Map(sections.map((s) => [s.id, s.signalStep]));
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (!visible.length) return;
+      const topId = visible[0].target.id;
+      setActiveFlowSection(topId, stepMap.get(topId) ?? 0);
+    },
+    { rootMargin: "-18% 0px -60% 0px", threshold: 0 },
+  );
+  for (const sec of sections) {
+    const target = $(sec.id);
+    if (target) sectionObserver.observe(target);
+  }
+}
 function revealAllImmediately() {
   for (const el of document.querySelectorAll("[data-scroll-reveal]")) {
     el.classList.add("is-revealed");
@@ -426,6 +527,8 @@ async function selectJob(id) {
   text("job-state", "Yükleniyor");
   text("job-description", "");
   updateJobStages(null);
+  observeScrollReveals($("job-panel"), { reset: true });
+  refreshScrollFlowNav();
   $("job-progress").hidden = false;
   $("job-progress").removeAttribute("value");
   async function poll() {
@@ -647,6 +750,7 @@ function renderComparison(diff) {
   $("compare-view").hidden = false;
   revealSection($("compare-view"));
   observeScrollReveals($("compare-view"), { reset: true });
+  refreshScrollFlowNav();
 
   const repoDisplay =
     diff.newerReport.repository ||
@@ -736,6 +840,7 @@ function renderReport(report, job) {
   $("results").hidden = false;
   revealSection($("results"));
   observeScrollReveals($("results"), { reset: true });
+  refreshScrollFlowNav();
   $("search").value = "";
   $("findings-only").checked = false;
   $("rule-filter").value = "all";
@@ -832,6 +937,7 @@ function renderReport(report, job) {
   }
   text("evaluation", report.model_evaluation || "Değerlendirme bulunmuyor.");
   renderFiles();
+  refreshScrollFlowNav();
 }
 function matchesSearch(file, query) {
   if (!query) return true;
@@ -1306,6 +1412,7 @@ function setFilesView(view) {
   $("repo-map-view").hidden = activeView !== "map";
   revealSection(activeView === "map" ? $("repo-map-view") : $("list-view"));
   renderFiles();
+  refreshScrollFlowNav();
 }
 $("view-list").addEventListener("click", () => setFilesView("list"));
 $("view-map").addEventListener("click", () => setFilesView("map"));
@@ -1334,6 +1441,7 @@ $("clear-filters").addEventListener("click", () => {
   $("rule-filter").value = "all";
   $("file-sort").value = "original";
   renderFiles();
+  refreshScrollFlowNav();
 });
 $("refresh").addEventListener("click", async () => {
   try {
@@ -1363,7 +1471,11 @@ $("run-compare").addEventListener("click", () => {
 $("compare-close").addEventListener("click", () => {
   $("compare-view").hidden = true;
   if (currentId) selectJob(currentId);
-  else $("welcome").hidden = false;
+  else {
+    $("welcome").hidden = false;
+    observeScrollReveals($("welcome"), { reset: true });
+    refreshScrollFlowNav();
+  }
 });
 $("scan-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -1395,6 +1507,7 @@ $("scan-form").addEventListener("submit", async (event) => {
 });
 (async () => {
   initScrollReveal();
+  refreshScrollFlowNav();
   try {
     const jobs = await refreshHistory();
     if (jobs.length) $("repo").value = jobs[0].payload.repo_path;
