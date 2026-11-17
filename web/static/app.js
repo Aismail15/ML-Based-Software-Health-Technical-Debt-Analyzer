@@ -325,6 +325,31 @@ async function refreshHistory() {
   renderHistory(jobs);
   return jobs;
 }
+const stageOrder = [
+  "validating",
+  "mining",
+  "historical_metrics",
+  "training",
+  "current_files",
+  "completed",
+];
+function updateJobStages(job) {
+  const panel = $("job-panel");
+  panel.dataset.state = job?.state || "queued";
+  const stage =
+    job?.state === "succeeded" ? "completed" : job?.progress?.stage || null;
+  const activeIdx = stage ? stageOrder.indexOf(stage) : -1;
+  for (const el of $("job-stages").querySelectorAll(".job-stage")) {
+    const idx = stageOrder.indexOf(el.dataset.stage);
+    el.classList.remove("is-done", "is-active");
+    if (job?.state === "failed") continue;
+    if (job?.state === "succeeded" || (activeIdx >= 0 && idx < activeIdx)) {
+      el.classList.add("is-done");
+    } else if (activeIdx >= 0 && idx === activeIdx) {
+      el.classList.add("is-active");
+    }
+  }
+}
 async function selectJob(id) {
   currentId = id;
   const version = ++viewVersion;
@@ -334,10 +359,12 @@ async function selectJob(id) {
   $("compare-view").hidden = true;
   $("welcome").hidden = true;
   $("job-panel").hidden = false;
+  $("job-panel").dataset.state = "loading";
   $("form-error").hidden = true;
   text("job-title", "Analiz yükleniyor…");
   text("job-state", "Yükleniyor");
   text("job-description", "");
+  updateJobStages(null);
   $("job-progress").hidden = false;
   $("job-progress").removeAttribute("value");
   async function poll() {
@@ -346,6 +373,7 @@ async function selectJob(id) {
       if (version !== viewVersion) return;
       text("job-title", projectName(job.payload.repo_path));
       text("job-state", states[job.state]);
+      updateJobStages(job);
       const p = job.progress;
       text(
         "job-description",

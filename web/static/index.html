@@ -234,6 +234,14 @@ yield { stage: "analyzing" }
           <span id="job-state" class="pill"></span>
         </div>
         <p id="job-description"></p>
+        <div id="job-stages" class="job-stages" aria-label="Analiz aşamaları">
+          <span class="job-stage" data-stage="validating">Doğrulama</span>
+          <span class="job-stage" data-stage="mining">Geçmiş</span>
+          <span class="job-stage" data-stage="historical_metrics">Tarihsel metrik</span>
+          <span class="job-stage" data-stage="training">Model</span>
+          <span class="job-stage" data-stage="current_files">Dosyalar</span>
+          <span class="job-stage" data-stage="completed">Tamamlandı</span>
+        </div>
         <progress
           id="job-progress"
           aria-label="Geçerli analiz adımının ilerlemesi"
