@@ -73,6 +73,18 @@ python -m cli.main analyze "C:\Hedef\Git\Reposu" --max-commits 200
 Spesifik Bir Dosyanın Analizi:
 python -m cli.main analyze "C:\Hedef\Git\Reposu" --file "src/core.py"
 
+### 🌐 Yerel Web Arayüzü (CodeScope)
+
+Tarayıcı üzerinden analiz sonuçlarını, dosya bulgularını, **Repo Haritası** ağacını ve aynı depoya ait iki taramanın karşılaştırmasını incelemek için yerel sunucuyu başlatabilirsiniz:
+
+```powershell
+.\start.cmd
+# veya doğrudan:
+python -m web --port 8765
+```
+
+Ayrıntılı Windows kurulumu için `docs/QUICKSTART_TR.md` dosyasına bakın.
+
 ## 🧠 Nasıl Çalışır?
 
 1. Phase 1 (Mining): En yeni commit'lerden başlanır. Değişen Python dosyaları, yolları ve düzeltme öncesi/sonrası sürümleri toplanır.
