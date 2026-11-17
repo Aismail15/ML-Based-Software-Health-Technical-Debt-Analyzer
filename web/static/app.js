@@ -192,7 +192,10 @@ function text(id, value) {
 }
 let revealObserver = null;
 let sectionObserver = null;
+let storyObserver = null;
 let currentFlowStep = null;
+let scrollFrame = 0;
+let currentStoryStep = 0;
 function getVisibleFlowSections() {
   const items = [{ id: "new-scan", label: "Analiz", signalStep: 0 }];
   if (!$("job-panel").hidden) {
@@ -208,7 +211,8 @@ function getVisibleFlowSections() {
       label: activeView === "map" ? "Repo haritası" : "Bulgular",
       signalStep: 2,
     });
-    items.push({ id: "results-details", label: "Değerlendirme", signalStep: 2 });
+    items.push({ id: "results-details", label: "Atlanan dosyalar", signalStep: 2 });
+    items.push({ id: "results-model-details", label: "Model notları", signalStep: 2 });
   }
   if (!$("compare-view").hidden) {
     items.push({ id: "compare-view", label: "Karşılaştırma", signalStep: 2 });
@@ -221,10 +225,90 @@ function getVisibleFlowSections() {
   return items;
 }
 function syncSignalHighlight(stepIndex) {
+  if (currentFlowStep === "welcome") return;
   const rows = document.querySelectorAll(".signal-art .signal-row");
   rows.forEach((row, idx) => {
     row.classList.toggle("is-scroll-highlighted", idx === stepIndex);
   });
+}
+function setActiveStoryStep(index) {
+  const steps = Array.from(document.querySelectorAll("[data-story-step]"));
+  if (!steps.length) return;
+  const next = Math.max(0, Math.min(steps.length - 1, index));
+  currentStoryStep = next;
+  steps.forEach((step, stepIndex) => {
+    step.classList.toggle("is-story-active", stepIndex === next);
+    step.classList.toggle("is-story-past", stepIndex < next);
+  });
+  document.querySelectorAll("[data-story-row]").forEach((row) => {
+    const rowIndex = Number(row.dataset.storyRow);
+    row.classList.toggle("is-story-current", rowIndex === next);
+    row.classList.toggle("is-story-complete", rowIndex < next);
+  });
+  document.querySelectorAll("[data-story-connector]").forEach((connector) => {
+    connector.classList.toggle(
+      "is-story-complete",
+      Number(connector.dataset.storyConnector) < next,
+    );
+  });
+  const captions = ["01 — KEŞFET", "02 — ANLA", "03 — KARAR"];
+  text("story-step-label", captions[next] || captions[0]);
+}
+function updateScrollProgress() {
+  const nav = $("scroll-flow-nav");
+  const maxScroll =
+    document.documentElement.scrollHeight - window.innerHeight;
+  const pageProgress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+  nav.style.setProperty(
+    "--scroll-progress",
+    `${Math.max(0, Math.min(1, pageProgress)) * 100}%`,
+  );
+
+  const welcome = $("welcome");
+  const fill = $("story-progress-fill");
+  if (!welcome.hidden && fill) {
+    const rect = welcome.getBoundingClientRect();
+    const storyRect = welcome.querySelector(".analysis-story").getBoundingClientRect();
+    const storyStart = storyRect.top + window.scrollY - window.innerHeight * 0.35;
+    const storyEnd = rect.bottom + window.scrollY - window.innerHeight * 0.65;
+    const range = Math.max(1, storyEnd - storyStart);
+    const progress = (window.scrollY - storyStart) / range;
+    fill.style.transform = `scaleX(${Math.max(0, Math.min(1, progress))})`;
+  }
+}
+function scheduleScrollProgress() {
+  if (scrollFrame) return;
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0;
+    updateScrollProgress();
+  });
+}
+function initStoryScroll() {
+  storyObserver?.disconnect();
+  storyObserver = null;
+  const steps = Array.from(document.querySelectorAll("[data-story-step]"));
+  if (!steps.length) return;
+  setActiveStoryStep(currentStoryStep);
+  if (!("IntersectionObserver" in window) || isMotionReduced()) return;
+  storyObserver = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      const center = window.innerHeight / 2;
+      const visible = steps
+        .map((step) => ({ step, rect: step.getBoundingClientRect() }))
+        .filter(({ rect }) => rect.bottom > center - 30 && rect.top < center + 30)
+        .sort(
+          (a, b) =>
+            Math.abs(a.rect.top + a.rect.height / 2 - center) -
+            Math.abs(b.rect.top + b.rect.height / 2 - center),
+        );
+      if (visible.length) {
+        setActiveStoryStep(Number(visible[0].step.dataset.storyStep));
+      }
+    },
+    { rootMargin: "-31% 0px -31% 0px", threshold: [0, 0.12, 0.3] },
+  );
+  for (const step of steps) storyObserver.observe(step);
 }
 function setActiveFlowSection(id, signalStep = 0) {
   currentFlowStep = id;
@@ -291,6 +375,7 @@ function refreshScrollFlowNav() {
     const target = $(sec.id);
     if (target) sectionObserver.observe(target);
   }
+  scheduleScrollProgress();
 }
 function revealAllImmediately() {
   for (const el of document.querySelectorAll("[data-scroll-reveal]")) {
@@ -346,12 +431,20 @@ function initScrollReveal() {
   observeScrollReveals(document);
 }
 document.addEventListener("codescope:motion-change", (event) => {
-  if (event.detail?.paused) revealAllImmediately();
-  else observeScrollReveals(document);
+  if (event.detail?.paused) {
+    revealAllImmediately();
+    storyObserver?.disconnect();
+    storyObserver = null;
+  } else {
+    observeScrollReveals(document);
+    initStoryScroll();
+  }
 });
 window.addEventListener("pagehide", () => {
   revealObserver?.disconnect();
   sectionObserver?.disconnect();
+  storyObserver?.disconnect();
+  cancelAnimationFrame(scrollFrame);
 });
 function revealSection(el) {
   el.classList.remove("panel-enter");
@@ -1515,7 +1608,11 @@ $("scan-form").addEventListener("submit", async (event) => {
 });
 (async () => {
   initScrollReveal();
+  initStoryScroll();
   refreshScrollFlowNav();
+  window.addEventListener("scroll", scheduleScrollProgress, { passive: true });
+  window.addEventListener("resize", scheduleScrollProgress, { passive: true });
+  scheduleScrollProgress();
   try {
     const jobs = await refreshHistory();
     if (jobs.length) $("repo").value = jobs[0].payload.repo_path;
