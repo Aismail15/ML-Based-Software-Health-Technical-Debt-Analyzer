@@ -6,6 +6,7 @@
     <title>CodeScope · Yazılım Sağlığı</title>
     <link rel="stylesheet" href="/assets/style.css" />
     <link rel="stylesheet" href="/assets/atmosphere.css" />
+    <link rel="stylesheet" href="/assets/scroll-story.css" />
     <script src="/assets/app.js" defer></script>
     <script src="/assets/atmosphere.js" defer></script>
   </head>
@@ -153,26 +154,6 @@ yield { stage: "analyzing" }
             ><span>Açıklanabilir bulgular</span>
           </div>
         </div>
-        <div class="signal-art" aria-hidden="true">
-          <div class="signal-caption">ANALİZ AKIŞI <span>01 — 03</span></div>
-          <div class="signal-row">
-            <span class="signal-number">01</span
-            ><span class="signal-code">commit → snapshot</span
-            ><span class="signal-point"></span>
-          </div>
-          <div class="signal-connector"></div>
-          <div class="signal-row">
-            <span class="signal-number">02</span
-            ><span class="signal-code">complexity · churn</span
-            ><span class="signal-point"></span>
-          </div>
-          <div class="signal-connector"></div>
-          <div class="signal-row signal-final">
-            <span class="signal-number">03</span
-            ><span class="signal-code">bulgu → karar</span><span>↗</span>
-          </div>
-          <div class="signal-bottom">KAYNAKTAN İÇGÖRÜYE<span>＋</span></div>
-        </div>
       </section>
       <section
         id="new-scan"
@@ -257,24 +238,60 @@ yield { stage: "analyzing" }
       <section id="welcome" class="welcome" data-scroll-reveal>
         <div class="welcome-heading">
           <span class="eyebrow">NASIL ÇALIŞIR?</span>
-          <h2>Üç adımda daha net bir bakış.</h2>
+          <h2>Kaydırdıkça kodun sinyalleri birleşir.</h2>
+          <p>Üç kısa adımda Git geçmişinden bakım kararına ilerle.</p>
         </div>
-        <div class="journey">
-          <article>
+        <div class="analysis-story">
+          <div class="story-console" aria-hidden="true">
+            <div class="signal-art">
+              <div class="signal-caption">
+                ANALİZ AKIŞI <span id="story-step-label">01 — KEŞFET</span>
+              </div>
+              <div class="signal-row" data-story-row="0">
+                <span class="signal-number">01</span
+                ><span class="signal-code">commit → snapshot</span
+                ><span class="signal-point"></span>
+              </div>
+              <div class="signal-connector" data-story-connector="0"></div>
+              <div class="signal-row" data-story-row="1">
+                <span class="signal-number">02</span
+                ><span class="signal-code">complexity · churn</span
+                ><span class="signal-point"></span>
+              </div>
+              <div class="signal-connector" data-story-connector="1"></div>
+              <div class="signal-row signal-final" data-story-row="2">
+                <span class="signal-number">03</span
+                ><span class="signal-code">bulgu → karar</span><span>↗</span>
+              </div>
+              <div class="signal-bottom">
+                KAYNAKTAN İÇGÖRÜYE<span>＋</span>
+              </div>
+              <div class="story-progress" aria-hidden="true">
+                <span id="story-progress-fill"></span>
+              </div>
+            </div>
+            <p class="story-scroll-hint">Kaydır ve akışın değişimini izle <span aria-hidden="true">↓</span></p>
+          </div>
+          <div class="journey story-steps">
+            <article class="story-step" data-story-step="0" data-scroll-reveal>
             <span>01 / KEŞFET</span>
             <h3>Geçmişi oku.</h3>
             <p>Commit geçmişi ve mevcut Python dosyaları birlikte incelenir.</p>
-          </article>
-          <article>
+            <div class="story-step-index" aria-hidden="true">01</div>
+            </article>
+            <article class="story-step" data-story-step="1" data-scroll-reveal>
             <span>02 / ANLA</span>
             <h3>Önceliğini belirle.</h3>
             <p>Karmaşıklık ve bakım bulgularını dosya düzeyinde değerlendir.</p>
-          </article>
-          <article>
+            <div class="story-step-index" aria-hidden="true">02</div>
+            </article>
+            <article class="story-step" data-story-step="2" data-scroll-reveal>
             <span>03 / PAYLAŞ</span>
             <h3>Kararını destekle.</h3>
             <p>Ölçümleri ve önerileri JSON ya da CSV olarak dışa aktar.</p>
-          </article>
+            <div class="story-step-index" aria-hidden="true">03</div>
+            </article>
+          </div>
         </div>
       </section>
       <section id="results" hidden>
@@ -411,7 +428,7 @@ yield { stage: "analyzing" }
             Bu seçimde gösterilecek dosya yok.
           </p>
         </section>
-        <details id="results-details" class="card detail-section" data-scroll-reveal>
+        <details id="results-model-details" class="card detail-section" data-scroll-reveal>
           <summary>Atlanan dosyalar ve nedenleri</summary>
           <ul id="skipped-list"></ul>
         </details>
