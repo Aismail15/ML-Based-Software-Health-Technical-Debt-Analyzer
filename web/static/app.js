@@ -190,6 +190,60 @@ let currentId = null,
 function text(id, value) {
   $(id).textContent = value;
 }
+let revealObserver = null;
+function revealAllImmediately() {
+  for (const el of document.querySelectorAll("[data-scroll-reveal]")) {
+    el.classList.add("is-revealed");
+    if (revealObserver) revealObserver.unobserve(el);
+  }
+}
+function isMotionReduced() {
+  return (
+    document.documentElement.classList.contains("motion-paused") ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+function observeScrollReveals(scope = document, { reset = false } = {}) {
+  const targets = Array.from(scope.querySelectorAll("[data-scroll-reveal]"));
+  if (scope !== document && scope.hasAttribute?.("data-scroll-reveal")) {
+    targets.unshift(scope);
+  }
+  if (!targets.length) return;
+  if (!("IntersectionObserver" in window) || isMotionReduced()) {
+    for (const el of targets) el.classList.add("is-revealed");
+    return;
+  }
+  const vh = window.innerHeight || 800;
+  for (const el of targets) {
+    if (el.closest("[hidden]") || el.hidden) continue;
+    if (reset) el.classList.remove("is-revealed");
+    const rect = el.getBoundingClientRect();
+    if (rect.top < vh * 0.9) {
+      el.classList.add("is-revealed");
+      revealObserver?.unobserve(el);
+    } else if (!el.classList.contains("is-revealed")) {
+      revealObserver?.observe(el);
+    }
+  }
+}
+function initScrollReveal() {
+  if (!("IntersectionObserver" in window)) {
+    revealAllImmediately();
+    return;
+  }
+  document.documentElement.classList.add("scroll-ready");
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add("is-revealed");
+        revealObserver.unobserve(entry.target);
+      }
+    },
+    { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
+  );
+  observeScrollReveals(document);
+}
 function revealSection(el) {
   el.classList.remove("panel-enter");
   void el.offsetWidth;
@@ -592,6 +646,7 @@ function renderComparison(diff) {
   $("form-error").hidden = true;
   $("compare-view").hidden = false;
   revealSection($("compare-view"));
+  observeScrollReveals($("compare-view"), { reset: true });
 
   const repoDisplay =
     diff.newerReport.repository ||
@@ -680,6 +735,7 @@ function renderReport(report, job) {
   skippedFiles = report.skipped_files || [];
   $("results").hidden = false;
   revealSection($("results"));
+  observeScrollReveals($("results"), { reset: true });
   $("search").value = "";
   $("findings-only").checked = false;
   $("rule-filter").value = "all";
@@ -1338,6 +1394,7 @@ $("scan-form").addEventListener("submit", async (event) => {
   }
 });
 (async () => {
+  initScrollReveal();
   try {
     const jobs = await refreshHistory();
     if (jobs.length) $("repo").value = jobs[0].payload.repo_path;

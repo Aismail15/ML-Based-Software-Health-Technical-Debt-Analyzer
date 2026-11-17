@@ -1400,6 +1400,21 @@ dialog h3 {
   .panel-enter {
     animation: reveal 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+  :root.scroll-ready:not(.motion-paused) [data-scroll-reveal] {
+    transition:
+      opacity 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  :root.scroll-ready:not(.motion-paused) [data-scroll-reveal]:not(.is-revealed) {
+    opacity: 0;
+    transform: translateY(22px);
+    will-change: opacity, transform;
+  }
+  :root.scroll-ready:not(.motion-paused) [data-scroll-reveal].is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+    will-change: auto;
+  }
   dialog[open] {
     animation: reveal 160ms ease-out;
   }
